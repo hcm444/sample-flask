@@ -2,8 +2,10 @@
 <html>
 <head>
     <title>Message Board</title>
+
 </head>
 <body style="background-color: #000; color: #0F0; font-family: 'Courier New', monospace; padding: 20px;">
+
     <section class="section">
         <div class="container" style="background-color: #000; border: 1px solid #0F0; padding: 20px;">
             <h1 class="title" style="text-align: center; color: #0F0;">Message Board</h1>
@@ -36,6 +38,7 @@
     {% for message in messages %}
     <li style="margin-bottom: 20px;">
         <strong>Post Number:</strong> {{ message['post_number'] }}<br>
+        <strong>Unique ID:</strong> {{ message['unique_id'] }}<br>
         <strong>Timestamp:</strong> {{ message['timestamp'] }}<br>
         <strong>Message:</strong> {{ message['message'] }}<br>
         <strong>Originality:</strong> {{ message['originality'] }}<br>  <!-- Display originality -->

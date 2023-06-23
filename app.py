@@ -8,7 +8,9 @@ from flask_caching import Cache
 import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import uuid  # Added import
 
+ip_unique_ids = {}
 nltk.download('punkt')
 post_counts = {}
 app = Flask(__name__)
@@ -25,6 +27,7 @@ class Message(Base):
     timestamp = Column(DateTime)
     message = Column(String)
     referenced_post = Column(String)
+    unique_id = Column(String)  # Added column
 
 Base.metadata.create_all(db_engine)
 
@@ -85,7 +88,8 @@ def home():
             'timestamp': message.timestamp,
             'message': message.message,
             'referenced_by': message.referenced_post.split(',') if message.referenced_post else None,
-            'originality': "{:.5f}".format(calculate_originality(message.message, [m.message for m in messages]))  # Calculate and format originality score
+            'originality': "{:.5f}".format(calculate_originality(message.message, [m.message for m in messages])),
+            'unique_id': message.unique_id  # Add unique_id field# Calculate and format originality score
         }
         for message in messages
     ]
@@ -97,6 +101,14 @@ def post():
     session = Session()
     message = request.form['message']
     ip_address = request.remote_addr
+
+    # Check if unique ID exists for the IP address
+    if ip_address in ip_unique_ids:
+        unique_id = ip_unique_ids[ip_address]
+    else:
+        # Generate a new unique ID for the IP address
+        unique_id = str(uuid.uuid4())
+        ip_unique_ids[ip_address] = unique_id
 
     if ip_address in post_counts and post_counts[ip_address]['count'] >= 3:
         if datetime.now() - post_counts[ip_address]['timestamp'] <= POST_LIMIT_DURATION:
@@ -128,7 +140,13 @@ def post():
         post_number = total_posts + 1
 
     timestamp = datetime.now()
-    new_post = Message(post_number=post_number, timestamp=timestamp, message=message, referenced_post=references)
+    new_post = Message(
+        post_number=post_number,
+        timestamp=timestamp,
+        message=message,
+        referenced_post=references,
+        unique_id=unique_id  # Store unique ID in the column
+    )
     session.add(new_post)
     session.commit()
 
