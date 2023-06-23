@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask_caching import Cache
 from flask import request, jsonify
+from sqlalchemy import desc
 
 post_counts = {}
 app = Flask(__name__)
@@ -75,7 +76,6 @@ def post():
         session.close()
         return jsonify({'error': 'Exceeded post limit. Please wait before posting again.'})
 
-
     if len(message) > 300:
         session.close()
         return jsonify({'error': 'Error: Message exceeds 300 characters.'})
@@ -87,6 +87,13 @@ def post():
     if existing_message:
         session.close()
         return jsonify({'error': 'Error: This message already exists.'})
+
+    # Remove older posts if the total number of posts exceeds 100
+    total_posts = session.query(Message).count()
+    if total_posts >= 100:
+        oldest_posts = session.query(Message).order_by(Message.id).limit(total_posts - 99).all()
+        for post in oldest_posts:
+            session.delete(post)
 
     post_number = session.query(Message).count() + 1
     timestamp = datetime.now()
@@ -102,6 +109,7 @@ def post():
 
     session.close()
     return redirect('/')
+
 
 
 if __name__ == '__main__':
