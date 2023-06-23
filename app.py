@@ -64,7 +64,6 @@ def home():
     return render_template('index.html', messages=messages_dict)
 
 
-@app.route('/post', methods=['POST'])
 def post():
     session = Session()
     message = request.form['message']
@@ -87,7 +86,14 @@ def post():
         session.close()
         return jsonify({'error': 'Error: This message already exists.'})
 
-    post_number = session.query(Message).count() + 1
+    # Check the total number of posts
+    total_posts = session.query(Message).count()
+    if total_posts >= 100:
+        # Delete the oldest post
+        oldest_post = session.query(Message).order_by(Message.timestamp).first()
+        session.delete(oldest_post)
+
+    post_number = total_posts + 1
     timestamp = datetime.now()
     new_post = Message(post_number=post_number, timestamp=timestamp, message=message, referenced_post=references)
     session.add(new_post)
