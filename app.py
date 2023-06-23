@@ -5,9 +5,9 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask_caching import Cache
+from flask import request, jsonify
 
-
-
+post_counts = {}
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
@@ -63,17 +63,23 @@ def home():
     session.close()
     return render_template('index.html', messages=messages_dict)
 
+
 @app.route('/post', methods=['POST'])
 def post():
     session = Session()
     message = request.form['message']
+    ip_address = request.remote_addr
+
+    # Check if the IP address has exceeded the post limit
+    if ip_address in post_counts and post_counts[ip_address] >= 3:
+        session.close()
+        return jsonify({'error': 'Exceeded post limit. Please wait before posting again.'})
 
     if len(message) > 300:
         session.close()
-        return "Error: Message exceeds 300 characters."
+        return jsonify({'error': 'Error: Message exceeds 300 characters.'})
 
     references = extract_referenced_posts(message)
-
 
     post_number = session.query(Message).count() + 1
     timestamp = datetime.now()
@@ -83,6 +89,9 @@ def post():
 
     for referenced_post in references.split(','):
         update_referenced_post(referenced_post, post_number)
+
+    # Update the post count for the IP address
+    post_counts[ip_address] = post_counts.get(ip_address, 0) + 1
 
     session.close()
     return redirect('/')
