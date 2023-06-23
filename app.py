@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect
-from datetime import datetime, timedelta
+from datetime import datetime
 import re
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from flask_caching import Cache
 from flask import request, jsonify
 
-last_post_times = {}
+post_counts = {}
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
@@ -71,13 +71,10 @@ def post():
     message = request.form['message']
     ip_address = request.remote_addr
 
-    # Check if the IP address has posted within the last 5 minutes
-    if ip_address in last_post_times:
-        last_post_time = last_post_times[ip_address]
-        elapsed_time = datetime.now() - last_post_time
-        if elapsed_time < timedelta(minutes=5):
-            session.close()
-            return jsonify({'error': 'Please wait before posting again.'})
+    # Check if the IP address has exceeded the post limit
+    if ip_address in post_counts and post_counts[ip_address] >= 3:
+        session.close()
+        return jsonify({'error': 'Exceeded post limit. Please wait before posting again.'})
 
     if len(message) > 300:
         session.close()
@@ -94,8 +91,8 @@ def post():
     for referenced_post in references.split(','):
         update_referenced_post(referenced_post, post_number)
 
-    # Update the last post time for the IP address
-    last_post_times[ip_address] = datetime.now()
+    # Update the post count for the IP address
+    post_counts[ip_address] = post_counts.get(ip_address, 0) + 1
 
     session.close()
     return redirect('/')
