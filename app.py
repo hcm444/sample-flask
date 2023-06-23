@@ -1,24 +1,19 @@
-from flask import Flask, render_template, request, redirect
-from datetime import datetime
+from flask import Flask, render_template, request, redirect, jsonify
+from datetime import datetime, timedelta
 import re
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask_caching import Cache
-from flask import request, jsonify
-from sqlalchemy import desc
 
 post_counts = {}
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
-
-# Configure the database connection
 db_engine = create_engine('sqlite:///message_board.db')
 Base = declarative_base()
 Session = sessionmaker(bind=db_engine)
 
-# Define the Message model
 class Message(Base):
     __tablename__ = 'messages'
     id = Column(Integer, primary_key=True)
@@ -41,14 +36,14 @@ def update_referenced_post(referenced_post, post_number):
         session.commit()
         session.close()
 
-
-
 def extract_referenced_posts(message):
     referenced_posts = re.findall(r'>>(\d+)', message)
     return ','.join(referenced_posts)
 
+POST_LIMIT_DURATION = timedelta(minutes=1)
+
 @app.route('/')
-@cache.cached(timeout=60)  # Cache the result for 60 seconds
+@cache.cached(timeout=60)
 def home():
     session = Session()
     messages = session.query(Message).all()
@@ -64,17 +59,19 @@ def home():
     session.close()
     return render_template('index.html', messages=messages_dict)
 
-
 @app.route('/post', methods=['POST'])
 def post():
     session = Session()
     message = request.form['message']
     ip_address = request.remote_addr
 
-    # Check if the IP address has exceeded the post limit
-    if ip_address in post_counts and post_counts[ip_address] >= 3:
-        session.close()
-        return jsonify({'error': 'Exceeded post limit. Please wait before posting again.'})
+    if ip_address in post_counts and post_counts[ip_address]['count'] >= 3:
+        if datetime.now() - post_counts[ip_address]['timestamp'] <= POST_LIMIT_DURATION:
+            session.close()
+            remaining_time = (POST_LIMIT_DURATION - (datetime.now() - post_counts[ip_address]['timestamp'])).seconds
+            return jsonify({'error': 'Exceeded post limit. Please wait for {} seconds before posting again.'.format(remaining_time)})
+
+        post_counts[ip_address]['count'] = 0
 
     if len(message) > 300:
         session.close()
@@ -82,13 +79,11 @@ def post():
 
     references = extract_referenced_posts(message)
 
-    # Check if the message already exists in the database
     existing_message = session.query(Message).filter_by(message=message).first()
     if existing_message:
         session.close()
         return jsonify({'error': 'Error: This message already exists.'})
 
-    # Remove older posts if the total number of posts exceeds 100
     total_posts = session.query(Message).count()
     if total_posts >= 100:
         oldest_posts = session.query(Message).order_by(Message.id).limit(total_posts - 99).all()
@@ -104,13 +99,16 @@ def post():
     for referenced_post in references.split(','):
         update_referenced_post(referenced_post, post_number)
 
-    # Update the post count for the IP address
-    post_counts[ip_address] = post_counts.get(ip_address, 0) + 1
+    if ip_address not in post_counts:
+        post_counts[ip_address] = {'count': 1, 'timestamp': datetime.now()}
+    else:
+        post_counts[ip_address]['count'] += 1
+        post_counts[ip_address]['timestamp'] = datetime.now()
 
     session.close()
     return redirect('/')
 
 
-
 if __name__ == '__main__':
     app.run()
+
