@@ -64,6 +64,7 @@ def home():
     return render_template('index.html', messages=messages_dict)
 
 
+
 @app.route('/post', methods=['POST'])
 def post():
     session = Session()
