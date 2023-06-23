@@ -86,11 +86,14 @@ def post():
 
     total_posts = session.query(Message).count()
     if total_posts >= 100:
+        most_recent_post = session.query(Message.post_number).order_by(Message.id.desc()).first()
+        post_number = most_recent_post[0] + 1 if most_recent_post else 1
         oldest_posts = session.query(Message).order_by(Message.id).limit(total_posts - 99).all()
         for post in oldest_posts:
             session.delete(post)
+    else:
+        post_number = total_posts + 1
 
-    post_number = session.query(Message).count() + 1
     timestamp = datetime.now()
     new_post = Message(post_number=post_number, timestamp=timestamp, message=message, referenced_post=references)
     session.add(new_post)
@@ -109,6 +112,6 @@ def post():
     return redirect('/')
 
 
+
 if __name__ == '__main__':
     app.run()
-
