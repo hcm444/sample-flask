@@ -5,7 +5,11 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask_caching import Cache
+import nltk
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
+nltk.download('punkt')
 post_counts = {}
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -23,6 +27,34 @@ class Message(Base):
     referenced_post = Column(String)
 
 Base.metadata.create_all(db_engine)
+
+
+def calculate_originality(new_post, existing_posts):
+    # Combine new post and existing posts
+    all_posts = existing_posts + [new_post]
+
+    # Tokenize posts into sentences
+    tokenized_posts = [nltk.sent_tokenize(post) for post in all_posts]
+
+    # Flatten the list of sentences
+    flattened_posts = [sentence for post in tokenized_posts for sentence in post]
+
+    # Create a TF-IDF vectorizer
+    vectorizer = TfidfVectorizer()
+
+    # Compute the TF-IDF matrix
+    tfidf_matrix = vectorizer.fit_transform(flattened_posts)
+
+    # Calculate the cosine similarity between the new post and existing posts
+    similarity_matrix = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])
+
+    # Calculate the average similarity
+    average_similarity = similarity_matrix.mean()
+
+    # Calculate the originality score
+    originality_score = 1 - average_similarity
+
+    return originality_score
 
 def update_referenced_post(referenced_post, post_number):
     if referenced_post:
@@ -52,7 +84,8 @@ def home():
             'post_number': message.post_number,
             'timestamp': message.timestamp,
             'message': message.message,
-            'referenced_by': message.referenced_post.split(',') if message.referenced_post else None
+            'referenced_by': message.referenced_post.split(',') if message.referenced_post else None,
+            'originality': "{:.5f}".format(calculate_originality(message.message, [m.message for m in messages]))  # Calculate and format originality score
         }
         for message in messages
     ]

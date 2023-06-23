@@ -33,22 +33,23 @@
 
             <h2 class="subtitle" style="text-align: center; color: #0F0; margin-top: 20px;">Messages:</h2>
             <ul style="padding-left: 0;">
-                {% for message in messages %}
-                <li style="margin-bottom: 20px;">
-                    <strong>Post Number:</strong> {{ message['post_number'] }}<br>
-                    <strong>Timestamp:</strong> {{ message['timestamp'] }}<br>
-                    <strong>Message:</strong> {{ message['message'] }}<br>
-                    {% if message['referenced_by'] is not none %}
-                    <strong>Referenced by:</strong>
-                    <ul>
-                        {% for ref_post in message['referenced_by'] %}
-                        <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
+    {% for message in messages %}
+    <li style="margin-bottom: 20px;">
+        <strong>Post Number:</strong> {{ message['post_number'] }}<br>
+        <strong>Timestamp:</strong> {{ message['timestamp'] }}<br>
+        <strong>Message:</strong> {{ message['message'] }}<br>
+        <strong>Originality:</strong> {{ message['originality'] }}<br>  <!-- Display originality -->
+        {% if message['referenced_by'] is not none %}
+        <strong>Referenced by:</strong>
+        <ul>
+            {% for ref_post in message['referenced_by'] %}
+            <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
         </div>
     </section>
 </body>
