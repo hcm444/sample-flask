@@ -2,104 +2,38 @@
 <html>
 <head>
     <title>Message Board</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
-    <style>
-    body {
-        background-color: #000;
-        color: #0F0;
-        font-family: "Courier New", monospace;
-        padding: 20px;
-    }
-
-    h1, h2, h3 {
-        text-align: center;
-        color: #0F0;
-    }
-
-    h2.subtitle {
-        color: #0F0;
-        margin-top: 20px;
-    }
-
-    form {
-        margin-bottom: 20px;
-    }
-
-    textarea, input[type="submit"] {
-        background-color: #000;
-        color: #0F0;
-        border: 1px solid #0F0;
-        padding: 5px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    input[type="submit"] {
-        cursor: pointer;
-    }
-
-    ul {
-        padding-left: 0;
-    }
-
-    li {
-        margin-bottom: 20px;
-    }
-
-    a {
-        color: #0F0;
-    }
-
-    .container {
-        background-color: #000;
-        border: 1px solid #0F0;
-        padding: 20px;
-    }
-
-    .button.is-primary {
-        background-color: #0F0;
-        color: #000;
-        border-color: #0F0;
-    }
-
-    p {
-        color: #F00;
-        margin-bottom: 10px;
-    }
-</style>
-
 </head>
-<body>
+<body style="background-color: #000; color: #0F0; font-family: 'Courier New', monospace; padding: 20px;">
     <section class="section">
-        <div class="container">
-            <h1 class="title">Message Board</h1>
-            <h2 class="subtitle">Rules:</h2>
+        <div class="container" style="background-color: #000; border: 1px solid #0F0; padding: 20px;">
+            <h1 class="title" style="text-align: center; color: #0F0;">Message Board</h1>
+            <h2 class="subtitle" style="text-align: center; color: #0F0; margin-top: 20px;">Rules:</h2>
 
-            <h3>1. Messages are limited to 300 characters.</h3>
-            <h3>2. Messages must be original.</h3>
-            <h3>3. One post is allowed every five minutes.</h3>
+            <h3 style="color: #0F0;">1. Messages are limited to 300 characters.</h3>
+            <h3 style="color: #0F0;">2. Messages must be original.</h3>
+            <h3 style="color: #0F0;">3. One post is allowed every five minutes.</h3>
 
-            <h2 class="subtitle">Post a message:</h2>
+            <h2 class="subtitle" style="text-align: center; color: #0F0; margin-top: 20px;">Post a message:</h2>
             <form action="/post" method="post">
                 <div class="field">
                     <div class="control">
-                        <textarea class="textarea" name="message" rows="4" cols="50"></textarea>
+                        <textarea class="textarea" name="message" rows="4" cols="50" style="background-color: #000; color: #0F0; border: 1px solid #0F0; padding: 5px; width: 100%; box-sizing: border-box;"></textarea>
                     </div>
                 </div>
                 {% if error_message %}
-                <p style="color: red;">{{ error_message }}</p>
+                <p style="color: #F00; margin-bottom: 10px;">{{ error_message }}</p>
                 {% endif %}
                 <div class="field">
                     <div class="control">
-                        <input class="button is-primary" type="submit" value="Submit">
+                        <input class="button is-primary" type="submit" value="Submit" style="background-color: #0F0; color: #000; border-color: #0F0; cursor: pointer;">
                     </div>
                 </div>
             </form>
 
-            <h2 class="subtitle">Messages:</h2>
-            <ul>
+            <h2 class="subtitle" style="text-align: center; color: #0F0; margin-top: 20px;">Messages:</h2>
+            <ul style="padding-left: 0;">
                 {% for message in messages %}
-                <li>
+                <li style="margin-bottom: 20px;">
                     <strong>Post Number:</strong> {{ message['post_number'] }}<br>
                     <strong>Timestamp:</strong> {{ message['timestamp'] }}<br>
                     <strong>Message:</strong> {{ message['message'] }}<br>
