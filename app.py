@@ -5,7 +5,11 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask_caching import Cache
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
+# Create the limiter object
+limiter = Limiter(key_func=get_remote_address)
 
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -63,6 +67,7 @@ def home():
     return render_template('index.html', messages=messages_dict)
 
 @app.route('/post', methods=['POST'])
+@limiter.limit("1/minute")
 def post():
     session = Session()
     message = request.form['message']
