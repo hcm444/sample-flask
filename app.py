@@ -64,7 +64,6 @@ def home():
     return render_template('index.html', messages=messages_dict)
 
 
-
 @app.route('/post', methods=['POST'])
 def post():
     session = Session()
@@ -82,6 +81,12 @@ def post():
 
     references = extract_referenced_posts(message)
 
+    # Check if the message already exists in the database
+    existing_message = session.query(Message).filter_by(message=message).first()
+    if existing_message:
+        session.close()
+        return jsonify({'error': 'Error: This message already exists.'})
+
     post_number = session.query(Message).count() + 1
     timestamp = datetime.now()
     new_post = Message(post_number=post_number, timestamp=timestamp, message=message, referenced_post=references)
@@ -97,5 +102,6 @@ def post():
     session.close()
     return redirect('/')
 
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
