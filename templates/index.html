@@ -7,10 +7,11 @@
             background-color: #000;
             color: #0F0;
             font-family: "Courier New", monospace;
+            margin: 0;
+            padding: 20px;
         }
 
         h1, h2 {
-            color: #0F0;
             text-align: center;
         }
 
@@ -22,16 +23,17 @@
             background-color: #000;
             color: #0F0;
             border: 1px solid #0F0;
+            padding: 5px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         input[type="submit"] {
-            padding: 5px 10px;
             cursor: pointer;
         }
 
         ul {
-            list-style-type: none;
-            padding: 0;
+            padding-left: 0;
         }
 
         li {
@@ -50,7 +52,7 @@
     <form action="/post" method="post">
         <textarea name="message" rows="4" cols="50"></textarea><br>
         {% if error_message %}
-            <p style="color: red;">{{ error_message }}</p>
+        <p style="color: red;">{{ error_message }}</p>
         {% endif %}
         <input type="submit" value="Submit">
     </form>
@@ -58,19 +60,19 @@
     <h2>Messages:</h2>
     <ul>
         {% for message in messages %}
-            <li>
-                <strong>Post Number:</strong> {{ message['post_number'] }}<br>
-                <strong>Timestamp:</strong> {{ message['timestamp'] }}<br>
-                <strong>Message:</strong> {{ message['message'] }}<br>
-                {% if message['referenced_by'] is not none %}
-                    <strong>Referenced by:</strong>
-                    <ul>
-                        {% for ref_post in message['referenced_by'] %}
-                            <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </li>
+        <li>
+            <strong>Post Number:</strong> {{ message['post_number'] }}<br>
+            <strong>Timestamp:</strong> {{ message['timestamp'] }}<br>
+            <strong>Message:</strong> {{ message['message'] }}<br>
+            {% if message['referenced_by'] is not none %}
+            <strong>Referenced by:</strong>
+            <ul>
+                {% for ref_post in message['referenced_by'] %}
+                <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </li>
         {% endfor %}
     </ul>
 </body>
