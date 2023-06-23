@@ -10,7 +10,7 @@ gunicorn==20.0.4
 itsdangerous==1.1.0
 Jinja2==2.11.3
 MarkupSafe==1.1.1
-Werkzeug==1.0.1
+Werkzeug==2.3.3
 psycopg2==2.9.6
 SQLAlchemy==2.0.16
 typing_extensions==4.6.3
