@@ -108,7 +108,7 @@
                     </div>
                     {% if message['referenced_by'] is not none %}
                     <div class="referenced-posts">
-                                                ed by:
+                                               Referenced by:
                         <ul>
                             {% for ref_post in message['referenced_by'] %}
                             <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
