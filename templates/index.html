@@ -128,6 +128,7 @@
                         ID: {{ message['unique_id'] }}<br>
                         Timestamp: {{ message['timestamp'] }}<br>
                         Originality: {{ message['originality'] }}<br>
+                        Sentiment: {{ message.sentiment }}<br>
                         <div class="message-container" id="post{{ message['post_number'] }}">
                             {{ message['message'] }}
                         </div>
@@ -152,6 +153,7 @@
                                 ID: {{ reply['unique_id'] }}<br>
                                 Timestamp: {{ reply['timestamp'] }}<br>
                                 Originality: {{ reply['originality'] }}<br>
+                                Sentiment: {{ message.sentiment }}<br>
                                 <div class="message-container" id="post{{ reply['post_number'] }}">
                                     {{ reply['message'] }}
                                 </div>
@@ -171,6 +173,7 @@
                 <li>6/24/23 : Fixed "future get" issue. </li>
                 <li>6/24/23 : Cleaned up layout of HTML/CSS. </li>
                 <li>6/24/23 : Using The "X-Forwarded-For" header to forward client IP addresses. </li>
+                <li>6/24/23 : Added simple sentiment analysis. </li>
                 <li>6/24/23 : Cleaned up shit. </li>
             </ul>
         </div>

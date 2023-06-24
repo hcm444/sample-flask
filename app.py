@@ -11,6 +11,24 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import uuid  # Added import
 from sqlalchemy import text
+from nltk.sentiment import SentimentIntensityAnalyzer
+nltk.download('vader_lexicon')
+
+sia = SentimentIntensityAnalyzer()
+
+def calculate_sentiment(text):
+    sentiment = sia.polarity_scores(text)['compound']
+    if sentiment >= 0.8:
+        return 'Very Good'
+    elif sentiment >= 0.4:
+        return 'Good'
+    elif sentiment >= -0.2:
+        return 'Average'
+    elif sentiment >= -0.6:
+        return 'Bad'
+    else:
+        return 'Very Bad'
+
 
 ip_unique_ids = {}
 nltk.download('punkt')
@@ -119,7 +137,9 @@ def home():
             'referenced_by': message.referenced_post.split(',') if message.referenced_post else None,
             'originality': "{:.5f}".format(calculate_originality(message.message, [m.message for m in messages])),
             'unique_id': message.unique_id,
-            'parent_post': message.parent_post  # Add parent_post field
+            'parent_post': message.parent_post,  # Add parent_post field
+            'sentiment': calculate_sentiment(message.message)  # Use sentiment labels
+
         }
         for message in messages
     ]
