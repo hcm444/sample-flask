@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Message Board</title>
+    <title>Prawn Board</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
     <style>
         body {
@@ -86,7 +86,7 @@
 <body>
     <section class="section">
         <div class="container">
-            <h1 class="title">Message Board</h1>
+            <h1 class="title">Prawn Board</h1>
             <h2 class="subtitle">Rules:</h2>
             <ul class="rules-list">
                 <li>Messages are limited to 300 characters.</li>
@@ -136,7 +136,7 @@
                             Referenced by:
                             <ul>
                                 {% for ref_post in message['referenced_by'] %}
-                                <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
+                                <a href="#post{{ ref_post }}">Post {{ ref_post }}</a>,
                                 {% endfor %}
                             </ul>
                         </div>
@@ -169,6 +169,7 @@
                 <li>6/24/23 : Re-enabled 3 post limit per minute.</li>
                 <li>6/24/23 : Fixed CSS text posting issues.</li>
                 <li>6/24/23 : Fixed "future get" issue. </li>
+                <li>6/24/23 : Cleaned up layout of HTML/CSS. </li>
                 <li>6/24/23 : Cleaned up shit. </li>
             </ul>
         </div>
