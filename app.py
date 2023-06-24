@@ -20,6 +20,7 @@ db_engine = create_engine('sqlite:///message_board.db')
 Base = declarative_base()
 Session = sessionmaker(bind=db_engine)
 
+
 class Message(Base):
     __tablename__ = 'messages'
     id = Column(Integer, primary_key=True)
@@ -27,8 +28,9 @@ class Message(Base):
     timestamp = Column(DateTime)
     message = Column(String)
     referenced_post = Column(String(length=200))
+    unique_id = Column(String)
+    parent_post = Column(Integer)  # New column for reply threads
 
-    unique_id = Column(String)  # Added column
 
 Base.metadata.create_all(db_engine)
 
@@ -60,6 +62,7 @@ def calculate_originality(new_post, existing_posts):
 
     return originality_score
 
+
 def update_referenced_post(referenced_post, post_number):
     if referenced_post:
         session = Session()
@@ -80,7 +83,19 @@ def extract_referenced_posts(message):
 
     return ','.join(referenced_posts[:10])
 
+
 POST_LIMIT_DURATION = timedelta(minutes=1)
+
+
+def get_child_messages(messages, parent_id):
+    # Recursive function to get child messages for a given parent ID
+    child_messages = []
+    for message in messages:
+        if message['parent_post'] == parent_id:
+            child_messages.append(message)
+            child_messages.extend(get_child_messages(messages, message['post_number']))
+    return child_messages
+
 
 @app.route('/')
 @cache.cached(timeout=60)
@@ -94,12 +109,22 @@ def home():
             'message': message.message,
             'referenced_by': message.referenced_post.split(',') if message.referenced_post else None,
             'originality': "{:.5f}".format(calculate_originality(message.message, [m.message for m in messages])),
-            'unique_id': message.unique_id  # Add unique_id field# Calculate and format originality score
+            'unique_id': message.unique_id,
+            'parent_post': message.parent_post  # Add parent_post field
         }
         for message in messages
     ]
+
+    # Build a hierarchical structure of messages based on parent-child relationship
+    root_messages = [message for message in messages_dict if message['parent_post'] is None]
+    threaded_messages = []
+    for root_message in root_messages:
+        root_message['replies'] = get_child_messages(messages_dict, root_message['post_number'])
+        threaded_messages.append(root_message)
+
     session.close()
-    return render_template('index.html', messages=messages_dict)
+    return render_template('index.html', messages=threaded_messages)
+
 
 @app.route('/post', methods=['POST'])
 def post():
@@ -115,19 +140,11 @@ def post():
         unique_id = str(uuid.uuid4())
         ip_unique_ids[ip_address] = unique_id
 
-    if ip_address in post_counts and post_counts[ip_address]['count'] >= 3:
-        if datetime.now() - post_counts[ip_address]['timestamp'] <= POST_LIMIT_DURATION:
-            session.close()
-            remaining_time = (POST_LIMIT_DURATION - (datetime.now() - post_counts[ip_address]['timestamp'])).seconds
-            return jsonify({'error': 'Exceeded post limit. Please wait for {} seconds before posting again.'.format(remaining_time)})
-
-        post_counts[ip_address]['count'] = 0
-
-    if len(message) > 300:
-        session.close()
-        return jsonify({'error': 'Error: Message exceeds 300 characters.'})
-
+    # Extract referenced posts from the message using regular expressions
     references = extract_referenced_posts(message)
+
+    # Get the parent post number from the referenced posts
+    parent_post = references.split(',')[0] if references else None
 
     existing_message = session.query(Message).filter_by(message=message).first()
     if existing_message:
@@ -150,7 +167,8 @@ def post():
         timestamp=timestamp,
         message=message,
         referenced_post=references,
-        unique_id=unique_id  # Store unique ID in the column
+        unique_id=unique_id,
+        parent_post=parent_post  # Store the parent post ID
     )
     session.add(new_post)
     session.commit()
@@ -166,7 +184,6 @@ def post():
 
     session.close()
     return redirect('/')
-
 
 
 if __name__ == '__main__':

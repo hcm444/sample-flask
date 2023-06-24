@@ -37,12 +37,29 @@
             margin-bottom: 20px;
         }
 
-        .message-container {
+        .post-container {
             background-color: #000;
             border: 1px solid #0F0;
             padding: 20px;
             color: #0F0;
-            word-wrap: break-word;  /* Add this line to enable text wrapping */
+            word-wrap: break-word;
+        }
+
+        .reply-list {
+            padding-left: 40px;
+        }
+
+        .reply-item {
+            padding-left: 0;
+            margin-bottom: 20px;
+        }
+
+        .reply-container {
+            background-color: #000;
+            border: 1px solid #0F0;
+            padding: 20px;
+            color: #0F0;
+            word-wrap: break-word;
         }
 
         .referenced-posts {
@@ -66,12 +83,10 @@
     </style>
 </head>
 <body>
-
     <section class="section">
         <div class="container">
             <h1 class="title">Message Board</h1>
             <h2 class="subtitle">Rules:</h2>
-
             <ul class="rules-list">
                 <li>Messages are limited to 300 characters.</li>
                 <li>Messages must be original.</li>
@@ -80,7 +95,6 @@
                 <li>Only 10 posts can be referenced per post.</li>
                 <li>Any referenced post has a maximum of 14 digits.</li>
             </ul>
-
             <h2 class="subtitle">Post a message:</h2>
             <form action="/post" method="post">
                 <div class="field">
@@ -97,27 +111,46 @@
                     </div>
                 </div>
             </form>
-
             <h2 class="subtitle">Messages:</h2>
-            <ul class="message-list">
+                                    <ul class="message-list">
                 {% for message in messages %}
                 <li class="message-item">
-                    <strong>Post Number: {{ message['post_number'] }}</strong><br>
-                    ID: {{ message['unique_id'] }}<br>
-                    Timestamp: {{ message['timestamp'] }}<br>
-                    Originality: {{ message['originality'] }}<br>
-                    <div class="message-container">
-                        {{ message['message'] }}
+                    <div class="post-container">
+                        <strong>Post Number: {{ message['post_number'] }}</strong><br>
+                        ID: {{ message['unique_id'] }}<br>
+                        Timestamp: {{ message['timestamp'] }}<br>
+                        Originality: {{ message['originality'] }}<br>
+                        <div class="message-container" id="post{{ message['post_number'] }}">
+                            {{ message['message'] }}
+                        </div>
+                        {% if message['referenced_by'] is not none %}
+                        <div class="referenced-posts">
+                            Referenced by:
+                            <ul>
+                                {% for ref_post in message['referenced_by'] %}
+                                <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% if message['referenced_by'] is not none %}
-                    <div class="referenced-posts">
-                        Referenced by:
-                        <ul>
-                            {% for ref_post in message['referenced_by'] %}
-                            <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+                    {% if message['replies'] %}
+                    <ul class="reply-list">
+                        {% for reply in message['replies'] %}
+                        <li class="reply-item">
+                            <div class="reply-container">
+                                <strong>Reply to Post: {{ reply['referenced_post'] }}</strong><br>
+                                <strong>Reply Post Number: {{ reply['post_number'] }}</strong><br>
+                                ID: {{ reply['unique_id'] }}<br>
+                                Timestamp: {{ reply['timestamp'] }}<br>
+                                Originality: {{ reply['originality'] }}<br>
+                                <div class="message-container" id="post{{ reply['post_number'] }}">
+                                    {{ reply['message'] }}
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
                     {% endif %}
                 </li>
                 {% endfor %}
@@ -126,4 +159,3 @@
     </section>
 </body>
 </html>
-
