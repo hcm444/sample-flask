@@ -130,10 +130,10 @@ def post():
         return jsonify({'error': 'Error: This message already exists.'})
 
     total_posts = session.query(Message).count()
-    if total_posts >= 200:
+    if total_posts >= 100:
         most_recent_post = session.query(Message.post_number).order_by(Message.id.desc()).first()
         post_number = most_recent_post[0] + 1 if most_recent_post else 1
-        oldest_posts = session.query(Message).order_by(Message.id).limit(total_posts - 199).all()
+        oldest_posts = session.query(Message).order_by(Message.id).limit(total_posts - 99).all()
         for post in oldest_posts:
             session.delete(post)
     else:
