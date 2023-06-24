@@ -42,6 +42,7 @@
             border: 1px solid #0F0;
             padding: 20px;
             color: #0F0;
+            word-wrap: break-word;  /* Add this line to enable text wrapping */
         }
 
         .referenced-posts {
@@ -55,7 +56,7 @@
             cursor: pointer;
         }
 
-        .textarea,
+        .textarea-wrap,
         .button.is-primary,
         .rules-list li {
             background-color: #000;
@@ -82,7 +83,7 @@
             <form action="/post" method="post">
                 <div class="field">
                     <div class="control">
-                        <textarea class="textarea" name="message" rows="4" cols="50"></textarea>
+                        <textarea class="textarea textarea-wrap" name="message" rows="4" cols="50"></textarea>
                     </div>
                 </div>
                 {% if error_message %}
@@ -108,7 +109,7 @@
                     </div>
                     {% if message['referenced_by'] is not none %}
                     <div class="referenced-posts">
-                                               Referenced by:
+                        Referenced by:
                         <ul>
                             {% for ref_post in message['referenced_by'] %}
                             <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
@@ -123,3 +124,4 @@
     </section>
 </body>
 </html>
+
