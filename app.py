@@ -26,7 +26,8 @@ class Message(Base):
     post_number = Column(Integer)
     timestamp = Column(DateTime)
     message = Column(String)
-    referenced_post = Column(String)
+    referenced_post = Column(String(length=200))
+
     unique_id = Column(String)  # Added column
 
 Base.metadata.create_all(db_engine)
@@ -66,14 +67,18 @@ def update_referenced_post(referenced_post, post_number):
         if message:
             referenced_posts = message.referenced_post.split(',') if message.referenced_post else []
             if str(post_number) not in referenced_posts:
+                # Limit the number of referenced posts to 10
                 referenced_posts.append(str(post_number))
+                referenced_posts = referenced_posts[-10:]
                 message.referenced_post = ','.join(referenced_posts)
         session.commit()
         session.close()
 
+
 def extract_referenced_posts(message):
-    referenced_posts = re.findall(r'>>(\d+)', message)
-    return ','.join(referenced_posts)
+    referenced_posts = re.findall(r'>>(\d{1,14})', message)
+
+    return ','.join(referenced_posts[:10])
 
 POST_LIMIT_DURATION = timedelta(minutes=1)
 
