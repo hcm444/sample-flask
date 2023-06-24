@@ -2,25 +2,87 @@
 <html>
 <head>
     <title>Message Board</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        body {
+            background-color: #000;
+            color: #0F0;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+        }
 
+        .container {
+            background-color: #000;
+            border: 1px solid #0F0;
+            padding: 20px;
+        }
+
+        .title {
+            text-align: center;
+            color: #0F0;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #0F0;
+            margin-top: 20px;
+        }
+
+        .message-list {
+            padding-left: 0;
+        }
+
+        .message-item {
+            padding-left: 0;
+            margin-bottom: 20px;
+        }
+
+        .message-container {
+            background-color: #000;
+            border: 1px solid #0F0;
+            padding: 20px;
+            color: #0F0;
+        }
+
+        .referenced-posts {
+            color: #0F0;
+        }
+
+        .button.is-primary {
+            background-color: #0F0;
+            color: #000;
+            border-color: #0F0;
+            cursor: pointer;
+        }
+
+        .textarea,
+        .button.is-primary,
+        .rules-list li {
+            background-color: #000;
+            color: #0F0;
+            border: 1px solid #0F0;
+        }
+    </style>
 </head>
-<body style="background-color: #000; color: #0F0; font-family: 'Courier New', monospace; padding: 20px;">
+<body>
 
     <section class="section">
-        <div class="container" style="background-color: #000; border: 1px solid #0F0; padding: 20px;">
-            <h1 class="title" style="text-align: center; color: #0F0;">Message Board</h1>
-            <h2 class="subtitle" style="text-align: center; color: #0F0; margin-top: 20px;">Rules:</h2>
+        <div class="container">
+            <h1 class="title">Message Board</h1>
+            <h2 class="subtitle">Rules:</h2>
 
-            <h3 style="color: #0F0;">1. Messages are limited to 300 characters.</h3>
-            <h3 style="color: #0F0;">2. Messages must be original.</h3>
-            <h3 style="color: #0F0;">3. Users can post 3 times per minute.</h3>
-            <h3 style="color: #0F0;">4. Only 100 posts are saved, previous posts are deleted.</h3>
+            <ul class="rules-list">
+                <li>Messages are limited to 300 characters.</li>
+                <li>Messages must be original.</li>
+                <li>Users can post 3 times per minute.</li>
+                <li>Only 100 posts are saved, previous posts are deleted.</li>
+            </ul>
 
-            <h2 class="subtitle" style="text-align: center; color: #0F0; margin-top: 20px;">Post a message:</h2>
+            <h2 class="subtitle">Post a message:</h2>
             <form action="/post" method="post">
                 <div class="field">
                     <div class="control">
-                        <textarea class="textarea" name="message" rows="4" cols="50" style="background-color: #000; color: #0F0; border: 1px solid #0F0; padding: 5px; width: 100%; box-sizing: border-box;"></textarea>
+                        <textarea class="textarea" name="message" rows="4" cols="50"></textarea>
                     </div>
                 </div>
                 {% if error_message %}
@@ -28,32 +90,38 @@
                 {% endif %}
                 <div class="field">
                     <div class="control">
-                        <input class="button is-primary" type="submit" value="Submit" style="background-color: #0F0; color: #000; border-color: #0F0; cursor: pointer;">
+                        <input class="button is-primary" type="submit" value="Submit">
                     </div>
                 </div>
             </form>
 
-            <h2 class="subtitle" style="text-align: center; color: #0F0; margin-top: 20px;">Messages:</h2>
-            <ul style="padding-left: 0;">
-    {% for message in messages %}
-    <li style="margin-bottom: 20px;">
-        <strong>Post Number:</strong> {{ message['post_number'] }}<br>
-        <strong>Unique ID:</strong> {{ message['unique_id'] }}<br>
-        <strong>Timestamp:</strong> {{ message['timestamp'] }}<br>
-        <strong>Message:</strong> {{ message['message'] }}<br>
-        <strong>Originality:</strong> {{ message['originality'] }}<br>  <!-- Display originality -->
-        {% if message['referenced_by'] is not none %}
-        <strong>Referenced by:</strong>
-        <ul>
-            {% for ref_post in message['referenced_by'] %}
-            <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-    </li>
-    {% endfor %}
-</ul>
+            <h2 class="subtitle">Messages:</h2>
+            <ul class="message-list">
+                {% for message in messages %}
+                <li class="message-item">
+                    <strong>Post Number: {{ message['post_number'] }}</strong><br>
+                    ID: {{ message['unique_id'] }}<br>
+                    Timestamp: {{ message['timestamp'] }}<br>
+                    Originality: {{ message['originality'] }}<br>
+                    <div class="message-container">
+                        {{ message['message'] }}
+                    </div>
+                    {% if message['referenced_by'] is not none %}
+                    <div class="referenced-posts">
+                                                ed by:
+                        <ul>
+                            {% for ref_post in message['referenced_by'] %}
+                            <li><a href="#post{{ ref_post }}">Post {{ ref_post }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
         </div>
     </section>
+
 </body>
 </html>
+
