@@ -138,9 +138,9 @@
                     <ul class="reply-list">
                         {% for reply in message['replies'] %}
                         <li class="reply-item">
-                            <div class="reply-container">
-                                <strong>Reply to Post: {{ reply['referenced_post'] }}</strong><br>
-                                <strong>Reply Post Number: {{ reply['post_number'] }}</strong><br>
+                            <div class="post-container">
+
+                                <strong>Post Number: {{ reply['post_number'] }}</strong><br>
                                 ID: {{ reply['unique_id'] }}<br>
                                 Timestamp: {{ reply['timestamp'] }}<br>
                                 Originality: {{ reply['originality'] }}<br>
