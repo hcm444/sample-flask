@@ -82,7 +82,14 @@ def update_referenced_post(referenced_post, post_number):
 def extract_referenced_posts(message):
     referenced_posts = re.findall(r'>>(\d{1,14})', message)
 
-    return ','.join(referenced_posts[:10])
+    session = Session()
+    existing_post_numbers = [str(post[0]) for post in session.query(Message.post_number).all()]
+    session.close()
+
+    # Filter out referenced post numbers that don't exist in the database
+    valid_referenced_posts = [post for post in referenced_posts if post in existing_post_numbers]
+
+    return ','.join(valid_referenced_posts[:10])
 
 
 POST_LIMIT_DURATION = timedelta(minutes=1)
@@ -150,6 +157,23 @@ def post():
     if existing_message:
         session.close()
         return jsonify({'error': 'Error: This message already exists.'})
+
+    if ip_address in post_counts:
+        count = post_counts[ip_address]['count']
+        timestamp = post_counts[ip_address]['timestamp']
+        time_diff = datetime.now() - timestamp
+
+        # Reset the post count if more than a minute has passed
+        if time_diff > POST_LIMIT_DURATION:
+            post_counts[ip_address] = {'count': 1, 'timestamp': datetime.now()}
+        elif count >= 3:
+            session.close()
+            return jsonify({'error': 'Error: You can only post three times per minute.'})
+        else:
+            post_counts[ip_address]['count'] += 1
+            post_counts[ip_address]['timestamp'] = datetime.now()
+    else:
+        post_counts[ip_address] = {'count': 1, 'timestamp': datetime.now()}
 
     total_posts = session.query(Message).count()
     if total_posts >= 100:

@@ -43,6 +43,7 @@
             padding: 20px;
             color: #0F0;
             word-wrap: break-word;
+            overflow: hidden;
         }
 
         .reply-list {
@@ -59,6 +60,7 @@
             padding: 20px;
             color: #0F0;
             word-wrap: break-word;
+            overflow: hidden;
         }
 
         .referenced-posts {
@@ -161,7 +163,16 @@
                 </li>
                 {% endfor %}
             </ul>
+            <h2 class="subtitle">Janny Developer Log:</h2>
+            <ul class="rules-list">
+                <li>6/24/23 : Fixed issue regarding SQL injections.</li>
+                <li>6/24/23 : Re-enabled 3 post limit per minute.</li>
+                <li>6/24/23 : Fixed CSS text posting issues.</li>
+                <li>6/24/23 : Fixed "future get" issue. </li>
+                <li>6/24/23 : Cleaned up shit. </li>
+            </ul>
         </div>
+
     </section>
 </body>
 </html>
