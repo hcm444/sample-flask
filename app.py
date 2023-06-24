@@ -9,6 +9,7 @@ import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import uuid  # Added import
+from sqlalchemy import text
 
 ip_unique_ids = {}
 nltk.download('punkt')
@@ -132,19 +133,18 @@ def post():
     message = request.form['message']
     ip_address = request.remote_addr
 
-    # Check if unique ID exists for the IP address
     if ip_address in ip_unique_ids:
         unique_id = ip_unique_ids[ip_address]
     else:
-        # Generate a new unique ID for the IP address
         unique_id = str(uuid.uuid4())
         ip_unique_ids[ip_address] = unique_id
 
-    # Extract referenced posts from the message using regular expressions
     references = extract_referenced_posts(message)
-
-    # Get the parent post number from the referenced posts
     parent_post = references.split(',')[0] if references else None
+
+    if len(message) > 300:
+        session.close()
+        return jsonify({'error': 'Error: Message should not exceed 300 characters.'})
 
     existing_message = session.query(Message).filter_by(message=message).first()
     if existing_message:
@@ -162,15 +162,21 @@ def post():
         post_number = total_posts + 1
 
     timestamp = datetime.now()
-    new_post = Message(
-        post_number=post_number,
-        timestamp=timestamp,
-        message=message,
-        referenced_post=references,
-        unique_id=unique_id,
-        parent_post=parent_post  # Store the parent post ID
+
+    # Use a parameterized query to insert the new post
+    query = text(
+        "INSERT INTO messages (post_number, timestamp, message, referenced_post, unique_id, parent_post) "
+        "VALUES (:post_number, :timestamp, :message, :referenced_post, :unique_id, :parent_post)"
     )
-    session.add(new_post)
+    params = {
+        'post_number': post_number,
+        'timestamp': timestamp,
+        'message': message,
+        'referenced_post': references,
+        'unique_id': unique_id,
+        'parent_post': parent_post
+    }
+    session.execute(query, params)
     session.commit()
 
     for referenced_post in references.split(','):
