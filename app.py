@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, jsonify
+
 from datetime import datetime, timedelta
 import re
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
@@ -138,7 +139,8 @@ def home():
 def post():
     session = Session()
     message = request.form['message']
-    ip_address = request.remote_addr
+    ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+
 
     if ip_address in ip_unique_ids:
         unique_id = ip_unique_ids[ip_address]
