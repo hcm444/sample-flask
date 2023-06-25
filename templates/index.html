@@ -68,116 +68,174 @@
         }
 
         .button.is-primary {
-            background-color: #0F0;
-            color: #000;
-            border-color: #0F0;
-            cursor: pointer;
+    background-color: #0F0;
+    color: #000;
+    border-color: #0F0;
+    cursor: pointer;
+}
+
+.button.is-primary:focus,
+.button.is-primary:active {
+    background-color: #0F0;
+    color: #000;
+    border-color: #0F0;
+}
+
+.button.is-primary {
+    background-color: #0F0;
+    color: #000;
+    border-color: #0F0;
+    cursor: pointer;
+}
+
+.button.is-primary.clicked {
+    background-color: #000;
+    color: #0F0;
+    border-color: #0F0;
+}
+
+        .toggle-button {
+            margin-top: 10px;
+            margin-bottom:10px;
         }
 
         .textarea-wrap,
         .button.is-primary,
+        .toggle-button,
         .rules-list li {
             background-color: #000;
             color: #0F0;
             border: 1px solid #0F0;
         }
+
+
     </style>
+    <script>
+        // JavaScript code to toggle the visibility of replies
+        // JavaScript code to toggle the visibility of replies
+document.addEventListener("DOMContentLoaded", function() {
+    var toggleButtons = document.getElementsByClassName("toggle-button");
+
+    Array.from(toggleButtons).forEach(function(button) {
+        button.addEventListener("click", function() {
+            var parentPost = this.parentNode;
+            var replies = parentPost.getElementsByClassName("reply-list")[0];
+            if (replies.style.display === "none") {
+                replies.style.display = "block";
+            } else {
+                replies.style.display = "none";
+            }
+            this.classList.add("clicked");
+            var clickedButton = this;
+            setTimeout(function() {
+                clickedButton.classList.remove("clicked");
+            }, 300);
+        });
+    });
+});
+
+
+
+
+    </script>
 </head>
 <body>
-    <section class="section">
-        <div class="container">
-            <h1 class="title">Prawn Board</h1>
-            <h2 class="subtitle">Rules:</h2>
-            <ul class="rules-list">
-                <li>Messages are limited to 300 characters.</li>
-                <li>Messages must be original.</li>
-                <li>Users can post 3 times per minute.</li>
-                <li>Only 100 posts are saved, previous posts are deleted.</li>
-                <li>Only 10 posts can be referenced per post.</li>
-                <li>Any referenced post has a maximum of 14 digits.</li>
-            </ul>
-            <h2 class="subtitle">Features:</h2>
-            <ul class="rules-list">
-                <li>SQL injection proof.</li>
-                <li>Originality graded by custom algorithms.</li>
-                <li>Friendly community.</li>
-                <li>Dedicated janitor cleans up your shit.</li>
-            </ul>
-            <h2 class="subtitle">Post a message:</h2>
-            <form action="/post" method="post">
-                <div class="field">
-                    <div class="control">
-                        <textarea class="textarea textarea-wrap" name="message" rows="4" cols="50"></textarea>
-                    </div>
+<section class="section">
+    <div class="container">
+        <h1 class="title">Prawn Board</h1>
+        <h2 class="subtitle">Rules:</h2>
+        <ul class="rules-list">
+            <li>Messages are limited to 300 characters.</li>
+            <li>Messages must be original.</li>
+            <li>Users can post 3 times per minute.</li>
+            <li>Only 100 posts are saved, previous posts are deleted.</li>
+            <li>Only 10 posts can be referenced per post.</li>
+            <li>Any referenced post has a maximum of 14 digits.</li>
+        </ul>
+        <h2 class="subtitle">Features:</h2>
+        <ul class="rules-list">
+            <li>SQL injection proof.</li>
+            <li>Originality graded by custom algorithms.</li>
+            <li>Friendly community.</li>
+            <li>Dedicated janitor cleans up your shit.</li>
+        </ul>
+        <h2 class="subtitle">Post a message:</h2>
+        <form action="/post" method="post">
+            <div class="field">
+                <div class="control">
+                    <textarea class="textarea textarea-wrap" name="message" rows="4" cols="50"></textarea>
                 </div>
-                {% if error_message %}
-                <p style="color: #F00; margin-bottom: 10px;">{{ error_message }}</p>
-                {% endif %}
-                <div class="field">
-                    <div class="control">
-                        <input class="button is-primary" type="submit" value="Submit">
-                    </div>
+            </div>
+            {% if error_message %}
+            <p style="color: #F00; margin-bottom: 10px;">{{ error_message }}</p>
+            {% endif %}
+            <div class="field">
+                <div class="control">
+                    <input class="button is-primary" type="submit" value="Submit">
                 </div>
-            </form>
-            <h2 class="subtitle">Messages:</h2>
-                                    <ul class="message-list">
-                {% for message in messages %}
-                <li class="message-item">
-                    <div class="post-container">
-                        <strong>Post Number: {{ message['post_number'] }}</strong><br>
-                        ID: {{ message['unique_id'] }}<br>
-                        Timestamp: {{ message['timestamp'] }}<br>
-                        Originality: {{ message['originality'] }}<br>
-                        Sentiment: {{ message.sentiment }}<br>
-                        <div class="message-container" id="post{{ message['post_number'] }}">
-                            {{ message['message'] }}
-                        </div>
-                        {% if message['referenced_by'] is not none %}
-                        <div class="referenced-posts">
-                            Referenced by:
-                            <ul>
-                                {% for ref_post in message['referenced_by'] %}
-                                <a href="#post{{ ref_post }}">Post {{ ref_post }}</a>,
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
+            </div>
+        </form>
+        <h2 class="subtitle">Messages:</h2>
+        <ul class="message-list">
+            {% for message in messages %}
+            <li class="message-item">
+                <div class="post-container">
+                    <strong>Post Number: {{ message['post_number'] }}</strong><br>
+                    ID: {{ message['unique_id'] }}<br>
+                    Timestamp: {{ message['timestamp'] }}<br>
+                    Originality: {{ message['originality'] }}<br>
+                    Sentiment: {{ message.sentiment }}<br>
+                    <div class="message-container" id="post{{ message['post_number'] }}">
+                        {{ message['message'] }}
                     </div>
-                    {% if message['replies'] %}
-                    <ul class="reply-list">
-                        {% for reply in message['replies'] %}
-                        <li class="reply-item">
-                            <div class="post-container">
-
-                                <strong>Post Number: {{ reply['post_number'] }}</strong><br>
-                                ID: {{ reply['unique_id'] }}<br>
-                                Timestamp: {{ reply['timestamp'] }}<br>
-                                Originality: {{ reply['originality'] }}<br>
-                                Sentiment: {{ message.sentiment }}<br>
-                                <div class="message-container" id="post{{ reply['post_number'] }}">
-                                    {{ reply['message'] }}
-                                </div>
-                            </div>
-                        </li>
-                        {% endfor %}
-                    </ul>
+                    {% if message['referenced_by'] is not none %}
+                    <div class="referenced-posts">
+                        Referenced by:
+                        <ul>
+                            {% for ref_post in message['referenced_by'] %}
+                            <a href="#post{{ ref_post }}">Post {{ ref_post }}</a>,
+                            {% endfor %}
+                        </ul>
+                    </div>
                     {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-            <h2 class="subtitle">Janny Developer Log:</h2>
-            <ul class="rules-list">
-                <li>6/24/23 : Fixed issue regarding SQL injections.</li>
-                <li>6/24/23 : Re-enabled 3 post limit per minute.</li>
-                <li>6/24/23 : Fixed CSS text posting issues.</li>
-                <li>6/24/23 : Fixed "future get" issue. </li>
-                <li>6/24/23 : Cleaned up layout of HTML/CSS. </li>
-                <li>6/24/23 : Using The "X-Forwarded-For" header to forward client IP addresses. </li>
-                <li>6/24/23 : Added simple sentiment analysis. </li>
-                <li>6/24/23 : Cleaned up shit. </li>
-            </ul>
-        </div>
+                </div>
+                {% if message['replies'] %}
+                <button class="toggle-button button is-primary">Toggle Replies</button>
+                <ul class="reply-list">
+                    {% for reply in message['replies'] %}
+                    <li class="reply-item">
+                        <div class="post-container">
 
-    </section>
+                            <strong>Post Number: {{ reply['post_number'] }}</strong><br>
+                            ID: {{ reply['unique_id'] }}<br>
+                            Timestamp: {{ reply['timestamp'] }}<br>
+                            Originality: {{ reply['originality'] }}<br>
+                            Sentiment: {{ message.sentiment }}<br>
+                            <div class="message-container" id="post{{ reply['post_number'] }}">
+                                {{ reply['message'] }}
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        <h2 class="subtitle">Janny Developer Log:</h2>
+        <ul class="rules-list">
+            <li>6/24/23 : Fixed issue regarding SQL injections.</li>
+            <li>6/24/23 : Re-enabled 3 post limit per minute.</li>
+            <li>6/24/23 : Fixed CSS text posting issues.</li>
+            <li>6/24/23 : Fixed "future get" issue.</li>
+            <li>6/24/23 : Cleaned up layout of HTML/CSS.</li>
+            <li>6/24/23 : Using The "X-Forwarded-For" header to forward client IP addresses.</li>
+            <li>6/24/23 : Added simple sentiment analysis.</li>
+            <li>6/24/23 : Added some JavaScript in order to toggle replies.</li>
+            <li>6/24/23 : Cleaned up shit.</li>
+        </ul>
+    </div>
+
+</section>
 </body>
 </html>
