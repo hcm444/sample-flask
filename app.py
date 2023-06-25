@@ -171,9 +171,9 @@ def post():
     references = extract_referenced_posts(message)
     parent_post = references.split(',')[0] if references else None
 
-    if len(message) > 300:
+    if len(message) > 500:
         session.close()
-        return jsonify({'error': 'Error: Message should not exceed 300 characters.'})
+        return jsonify({'error': 'Error: Message should not exceed 500 characters.'})
 
     existing_message = session.query(Message).filter_by(message=message).first()
     if existing_message:
@@ -198,10 +198,10 @@ def post():
         post_counts[ip_address] = {'count': 1, 'timestamp': datetime.now()}
 
     total_posts = session.query(Message).count()
-    if total_posts >= 100:
+    if total_posts >= 500:
         most_recent_post = session.query(Message.post_number).order_by(Message.id.desc()).first()
         post_number = most_recent_post[0] + 1 if most_recent_post else 1
-        oldest_posts = session.query(Message).order_by(Message.id).limit(total_posts - 99).all()
+        oldest_posts = session.query(Message).order_by(Message.id).limit(total_posts - 499).all()
         for post in oldest_posts:
             session.delete(post)
     else:
