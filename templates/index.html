@@ -66,13 +66,10 @@
         .referenced-posts {
             color: #0F0;
         }
+        .hidden {
+            display: none;
+        }
 
-        .button.is-primary {
-    background-color: #0F0;
-    color: #000;
-    border-color: #0F0;
-    cursor: pointer;
-}
 
 .button.is-primary:focus,
 .button.is-primary:active {
@@ -111,33 +108,84 @@
 
     </style>
     <script>
-        // JavaScript code to toggle the visibility of replies
-        // JavaScript code to toggle the visibility of replies
-document.addEventListener("DOMContentLoaded", function() {
-    var toggleButtons = document.getElementsByClassName("toggle-button");
+    // JavaScript code to toggle the visibility of stats
+    document.addEventListener("DOMContentLoaded", function() {
+        var toggleButton = document.getElementById("toggle-button");
+        var originalitySentiments = document.getElementsByClassName("originality-sentiment");
 
-    Array.from(toggleButtons).forEach(function(button) {
-        button.addEventListener("click", function() {
-            var parentPost = this.parentNode;
-            var replies = parentPost.getElementsByClassName("reply-list")[0];
-            if (replies.style.display === "none") {
-                replies.style.display = "block";
-            } else {
-                replies.style.display = "none";
-            }
-            this.classList.add("clicked");
+        toggleButton.addEventListener("click", function() {
+            Array.from(originalitySentiments).forEach(function(originalitySentiment) {
+                originalitySentiment.classList.toggle("hidden");
+            });
+
+            this.classList.toggle("clicked");
             var clickedButton = this;
             setTimeout(function() {
                 clickedButton.classList.remove("clicked");
             }, 300);
         });
     });
-});
 
+    // JavaScript code to toggle the visibility of replies
+    document.addEventListener("DOMContentLoaded", function() {
+        var toggleButtons = document.getElementsByClassName("toggle-button");
+        var toggleAllButton = document.getElementById("toggle-all-button");
+        var reverseButton = document.getElementById("reverse-button");
 
+        var toggleState = false; // Initialize toggle state
+        var reverseState = false; // Initialize reverse state
 
+        toggleAllButton.addEventListener("click", function() {
+            toggleState = !toggleState; // Toggle the state
 
-    </script>
+            Array.from(toggleButtons).forEach(function(button) {
+                var parentPost = button.parentNode;
+                var replies = parentPost.getElementsByClassName("reply-list")[0];
+                replies.style.display = toggleState ? "block" : "none"; // Set display based on toggle state
+                button.classList.add("clicked");
+                var clickedButton = button;
+                setTimeout(function() {
+                    clickedButton.classList.remove("clicked");
+                }, 300);
+            });
+        });
+
+        reverseButton.addEventListener("click", function() {
+            reverseState = !reverseState; // Toggle the state
+
+            var messageList = document.getElementsByClassName("message-list")[0];
+            var messageItems = Array.from(messageList.getElementsByClassName("message-item"));
+            messageItems.reverse(); // Reverse the order of message items
+
+            messageItems.forEach(function(item) {
+                messageList.appendChild(item); // Append items in reversed order
+            });
+
+            this.classList.add("clicked");
+            var clickedButton = this;
+            setTimeout(function() {
+                clickedButton.classList.remove("clicked");
+            }, 300);
+        });
+
+        Array.from(toggleButtons).forEach(function(button) {
+            button.addEventListener("click", function() {
+                var parentPost = this.parentNode;
+                var replies = parentPost.getElementsByClassName("reply-list")[0];
+                if (replies.style.display === "none") {
+                    replies.style.display = "block";
+                } else {
+                    replies.style.display = "none";
+                }
+                this.classList.add("clicked");
+                var clickedButton = this;
+                setTimeout(function() {
+                    clickedButton.classList.remove("clicked");
+                }, 300);
+            });
+        });
+    });
+</script>
 </head>
 <body>
 <section class="section">
@@ -149,8 +197,6 @@ document.addEventListener("DOMContentLoaded", function() {
             <li>Messages must be original.</li>
             <li>Users can post 3 times per minute.</li>
             <li>Only 500 posts are saved, previous posts are deleted.</li>
-            <li>Only 10 posts can be referenced per post.</li>
-            <li>Any referenced post has a maximum of 14 digits.</li>
         </ul>
         <h2 class="subtitle">Features:</h2>
         <ul class="rules-list">
@@ -169,11 +215,20 @@ document.addEventListener("DOMContentLoaded", function() {
             {% if error_message %}
             <p style="color: #F00; margin-bottom: 10px;">{{ error_message }}</p>
             {% endif %}
-            <div class="field">
+            <div class="field is-grouped">
+  <div class="control">
+    <input class="button is-primary" type="submit" value="Submit Post">
+  </div>
+  <div class="control">
+    <button class="button is-primary" type="button" id="toggle-button">Toggle Post Statistics</button>
+  </div>
                 <div class="control">
-                    <input class="button is-primary" type="submit" value="Submit">
-                </div>
-            </div>
+    <button class="button is-primary" type="button" id="toggle-all-button">Toggle All Replies</button>
+</div>
+                <div class="control">
+    <button class="button is-primary" type="button" id="reverse-button">Reverse Parent Post Order</button>
+</div>
+</div>
         </form>
         <h2 class="subtitle">Messages:</h2>
         <ul class="message-list">
@@ -183,8 +238,10 @@ document.addEventListener("DOMContentLoaded", function() {
                     <strong>Post Number: {{ message['post_number'] }}</strong><br>
                     ID: {{ message['unique_id'] }}<br>
                     Timestamp: {{ message['timestamp'] }}<br>
-                    Originality: {{ message['originality'] }}<br>
-                    Sentiment: {{ message.sentiment }}<br>
+                    <div class="originality-sentiment hidden">
+                        Originality: {{ message['originality'] }}<br>
+                        Sentiment: {{ message.sentiment }}<br>
+                    </div>
                     <div class="message-container" id="post{{ message['post_number'] }}">
                         {{ message['message'] }}
                     </div>
@@ -209,8 +266,10 @@ document.addEventListener("DOMContentLoaded", function() {
                             <strong>Post Number: {{ reply['post_number'] }}</strong><br>
                             ID: {{ reply['unique_id'] }}<br>
                             Timestamp: {{ reply['timestamp'] }}<br>
-                            Originality: {{ reply['originality'] }}<br>
-                            Sentiment: {{ message.sentiment }}<br>
+                            <div class="originality-sentiment hidden">
+                        Originality: {{ message['originality'] }}<br>
+                        Sentiment: {{ message.sentiment }}<br>
+                    </div>
                             <div class="message-container" id="post{{ reply['post_number'] }}">
                                 {{ reply['message'] }}
                             </div>
@@ -232,6 +291,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <li>6/24/23 : Using The "X-Forwarded-For" header to forward client IP addresses.</li>
             <li>6/24/23 : Added simple sentiment analysis.</li>
             <li>6/24/23 : Added some JavaScript in order to toggle replies.</li>
+            <li>6/24/23 : Added new buttons to make navigation easier.</li>
             <li>6/24/23 : Cleaned up shit.</li>
         </ul>
     </div>
