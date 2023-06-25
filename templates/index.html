@@ -53,6 +53,14 @@
         .reply-item {
             padding-left: 0;
         }
+        .message-list.grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-gap: 10px;
+            height: 100%;
+            overflow: hidden;
+            word-wrap: break-word;
+        }
 
         .reply-container {
             background-color: #000;
@@ -108,6 +116,32 @@
 
     </style>
     <script>
+
+document.addEventListener("DOMContentLoaded", function() {
+  var catalogButton = document.getElementById("catalog-button");
+  var messageList = document.getElementsByClassName("message-list")[0];
+  var toggleButtons = document.getElementsByClassName("toggle-button");
+
+  catalogButton.addEventListener("click", function() {
+    messageList.classList.toggle("grid");
+    this.classList.add("clicked");
+    var clickedButton = this;
+    setTimeout(function() {
+      clickedButton.classList.remove("clicked");
+    }, 300);
+
+    // Toggle visibility of "Toggle Replies" buttons
+    Array.from(toggleButtons).forEach(function(button) {
+      if (button.style.display === "none") {
+        button.style.display = "";
+      } else {
+        button.style.display = "none";
+      }
+    });
+  });
+});
+
+
     // JavaScript code to toggle the visibility of stats
     document.addEventListener("DOMContentLoaded", function() {
         var toggleButton = document.getElementById("toggle-button");
@@ -229,6 +263,9 @@
                 <div class="control">
     <button class="button is-primary" type="button" id="reverse-button">Reverse Post Order</button>
 </div>
+                <div class="control">
+  <button class="button is-primary" type="button" id="catalog-button">Catalog</button>
+</div>
 </div>
         </form>
         <h2 class="subtitle">Messages:</h2>
@@ -295,6 +332,7 @@
             <li>6/24/23 : Added new buttons to make navigation easier.</li>
             <li>6/24/23 : Oceanic username generation.</li>
             <li>6/24/23 : Cleaned up shit.</li>
+            <li>6/24/23 : Added Catalog View.</li>
         </ul>
     </div>
 
