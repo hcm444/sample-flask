@@ -1,3 +1,6 @@
+import string
+import random
+
 from flask import Flask, render_template, request, redirect, jsonify
 
 from datetime import datetime, timedelta
@@ -39,6 +42,18 @@ cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 db_engine = create_engine('sqlite:///message_board.db')
 Base = declarative_base()
 Session = sessionmaker(bind=db_engine)
+
+def generate_unique_id():
+    random_words = ['fish', 'crab', 'lobster', 'octopus', 'prawn', 'shrimp', 'clam', 'squid', 'shark', 'dolphin',
+                    'seahorse', 'whale', 'jellyfish', 'turtle', 'starfish', 'coral', 'seal', 'otter', 'eel', 'ray',
+                    'orca', 'manatee', 'anglerfish', 'walrus', 'manta_ray', 'swordfish', 'sea_lion', 'marlin',
+                    'dugong', 'stingray', 'hammerhead_shark', 'sea_snake', 'pufferfish', 'sea_urchin', 'mackerel',
+                    'narwhal', 'hermit_crab', 'sardine', 'barracuda', 'salmon', 'tuna']
+
+    random_letters = random.choices(string.ascii_letters + string.digits, k=6)
+    random_word = random.choice(random_words)
+    unique_id = random_word + '_' + ''.join(random_letters)
+    return unique_id
 
 
 class Message(Base):
@@ -161,11 +176,10 @@ def post():
     message = request.form['message']
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
 
-
     if ip_address in ip_unique_ids:
         unique_id = ip_unique_ids[ip_address]
     else:
-        unique_id = str(uuid.uuid4())
+        unique_id = generate_unique_id()
         ip_unique_ids[ip_address] = unique_id
 
     references = extract_referenced_posts(message)
@@ -239,4 +253,4 @@ def post():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
