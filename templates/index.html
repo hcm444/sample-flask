@@ -47,7 +47,7 @@
         }
 
         .reply-list {
-            padding-left: 40px;
+            padding-left: 10px;
         }
 
         .reply-item {
@@ -57,10 +57,12 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             grid-gap: 10px;
-            height: 100%;
             overflow: hidden;
             word-wrap: break-word;
+            text-overflow: ellipsis;
+
         }
+
 
         .reply-container {
             background-color: #000;
@@ -103,6 +105,7 @@
             margin-top: 10px;
             margin-bottom:10px;
         }
+
 
         .textarea-wrap,
         .button.is-primary,
@@ -273,9 +276,9 @@ document.addEventListener("DOMContentLoaded", function() {
             {% for message in messages %}
             <li class="message-item">
                 <div class="post-container">
-                    <strong>Post Number: {{ message['post_number'] }}</strong><br>
+                    #{{ message['post_number'] }}<br>
                     ID: {{ message['unique_id'] }}<br>
-                    Timestamp: {{ message['timestamp'] }}<br>
+                    {{ message['timestamp'] }}<br>
                     <div class="originality-sentiment hidden">
                         Originality: {{ message['originality'] }}<br>
                         Sentiment: {{ message.sentiment }}<br>
@@ -285,7 +288,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     </div>
                     {% if message['referenced_by'] is not none %}
                     <div class="referenced-posts">
-                        Referenced by:
                         <ul>
                             {% for ref_post in message['referenced_by'] %}
                             <a href="#post{{ ref_post }}">Post {{ ref_post }}</a>,
@@ -293,17 +295,16 @@ document.addEventListener("DOMContentLoaded", function() {
                         </ul>
                     </div>
                     {% endif %}
-                </div>
-                {% if message['replies'] %}
+                    {% if message['replies'] %}
                 <button class="toggle-button button is-primary">Toggle Replies</button>
                 <ul class="reply-list">
                     {% for reply in message['replies'] %}
                     <li class="reply-item">
                         <div class="post-container">
 
-                            <strong>Post Number: {{ reply['post_number'] }}</strong><br>
+                            #{{ reply['post_number'] }}<br>
                             ID: {{ reply['unique_id'] }}<br>
-                            Timestamp: {{ reply['timestamp'] }}<br>
+                            {{ reply['timestamp'] }}<br>
                             <div class="originality-sentiment hidden">
                         Originality: {{ message['originality'] }}<br>
                         Sentiment: {{ message.sentiment }}<br>
@@ -316,6 +317,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     {% endfor %}
                 </ul>
                 {% endif %}
+                </div>
+
             </li>
             {% endfor %}
         </ul>
@@ -331,8 +334,9 @@ document.addEventListener("DOMContentLoaded", function() {
             <li>6/24/23 : Added some JavaScript in order to toggle replies.</li>
             <li>6/24/23 : Added new buttons to make navigation easier.</li>
             <li>6/24/23 : Oceanic username generation.</li>
-            <li>6/24/23 : Cleaned up shit.</li>
             <li>6/24/23 : Added Catalog View.</li>
+            <li>6/25/23 : Simplified website layout even more.</li>
+            <li>6/25/23 : ID fix. Field will be automatically incremented for each new message, even if an error occurs during insertion.</li>
         </ul>
     </div>
 

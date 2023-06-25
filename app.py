@@ -58,13 +58,14 @@ def generate_unique_id():
 
 class Message(Base):
     __tablename__ = 'messages'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     post_number = Column(Integer)
     timestamp = Column(DateTime)
     message = Column(String)
     referenced_post = Column(String(length=200))
     unique_id = Column(String)
-    parent_post = Column(Integer)  # New column for reply threads
+    parent_post = Column(Integer)
+
 
 
 Base.metadata.create_all(db_engine)
