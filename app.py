@@ -1,6 +1,4 @@
-import string
-import random
-
+# Description: This file contains the code for the Flask application that runs the message board.
 from flask import Flask, render_template, request, redirect, jsonify
 
 from datetime import datetime, timedelta
@@ -12,7 +10,6 @@ from flask_caching import Cache
 import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import uuid  # Added import
 from sqlalchemy import text
 from nltk.sentiment import SentimentIntensityAnalyzer
 nltk.download('vader_lexicon')
