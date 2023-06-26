@@ -39,16 +39,7 @@ def generate_unique_id(ip_address):
 
 def calculate_sentiment(text):
     sentiment = sia.polarity_scores(text)['compound']
-    if sentiment >= 0.8:
-        return 'Very Good'
-    elif sentiment >= 0.4:
-        return 'Good'
-    elif sentiment >= -0.2:
-        return 'Average'
-    elif sentiment >= -0.6:
-        return 'Bad'
-    else:
-        return 'Very Bad'
+    return sentiment
 
 
 nltk.download('punkt')
@@ -145,6 +136,39 @@ def get_child_messages(messages, parent_id):
             child_messages.append(message)
             child_messages.extend(get_child_messages(messages, message['post_number']))
     return child_messages
+
+# app.py
+
+@app.route('/chart')
+@cache.cached(timeout=60)
+def chart():
+    session = Session()
+    messages = session.query(Message).all()
+    session.close()
+
+    users = {}  # Dictionary to store user data
+
+    # Process each message to calculate user-wise originality and sentiment
+    for message in messages:
+        user = message.unique_id
+
+        if user not in users:
+            users[user] = {'originality': [], 'sentiment': []}
+
+        originality = float(calculate_originality(message.message, [m.message for m in messages]))
+        sentiment = calculate_sentiment(message.message)
+
+        users[user]['originality'].append(originality)
+        users[user]['sentiment'].append(sentiment)
+
+    # Prepare data for charting
+    chart_data = []
+    for user, data in users.items():
+        avg_originality = sum(data['originality']) / len(data['originality'])
+        avg_sentiment = sum(data['sentiment']) / len(data['sentiment'])
+        chart_data.append({'user': user, 'originality': avg_originality, 'sentiment': avg_sentiment})
+
+    return render_template('chart.html', data=chart_data)
 
 
 @app.route('/')
