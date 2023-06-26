@@ -19,6 +19,27 @@ nltk.download('vader_lexicon')
 
 sia = SentimentIntensityAnalyzer()
 
+import hashlib
+
+def generate_unique_id(ip_address):
+    # Convert the IP address to bytes
+    ip_bytes = ip_address.encode('utf-8')
+
+    # Create a hash object using a cryptographic hash function (e.g., SHA256)
+    hasher = hashlib.sha256()
+
+    # Update the hash object with the IP address bytes
+    hasher.update(ip_bytes)
+
+    # Get the hexadecimal representation of the hash digest
+    hash_code = hasher.hexdigest()
+
+    # Return the first 16 characters as the unique ID
+    unique_id = hash_code[:16]
+
+    return unique_id
+
+
 def calculate_sentiment(text):
     sentiment = sia.polarity_scores(text)['compound']
     if sentiment >= 0.8:
@@ -33,7 +54,6 @@ def calculate_sentiment(text):
         return 'Very Bad'
 
 
-ip_unique_ids = {}
 nltk.download('punkt')
 post_counts = {}
 app = Flask(__name__)
@@ -43,17 +63,7 @@ db_engine = create_engine('sqlite:///message_board.db')
 Base = declarative_base()
 Session = sessionmaker(bind=db_engine)
 
-def generate_unique_id():
-    random_words = ['fish', 'crab', 'lobster', 'octopus', 'prawn', 'shrimp', 'clam', 'squid', 'shark', 'dolphin',
-                    'seahorse', 'whale', 'jellyfish', 'turtle', 'starfish', 'coral', 'seal', 'otter', 'eel', 'ray',
-                    'orca', 'manatee', 'anglerfish', 'walrus', 'manta_ray', 'swordfish', 'sea_lion', 'marlin',
-                    'dugong', 'stingray', 'hammerhead_shark', 'sea_snake', 'pufferfish', 'sea_urchin', 'mackerel',
-                    'narwhal', 'hermit_crab', 'sardine', 'barracuda', 'salmon', 'tuna']
 
-    random_letters = random.choices(string.ascii_letters + string.digits, k=6)
-    random_word = random.choice(random_words)
-    unique_id = random_word + '_' + ''.join(random_letters)
-    return unique_id
 
 
 class Message(Base):
@@ -176,13 +186,7 @@ def post():
     session = Session()
     message = request.form['message']
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-
-    if ip_address in ip_unique_ids:
-        unique_id = ip_unique_ids[ip_address]
-    else:
-        unique_id = generate_unique_id()
-        ip_unique_ids[ip_address] = unique_id
-
+    unique_id = generate_unique_id(ip_address)
     references = extract_referenced_posts(message)
     parent_post = references.split(',')[0] if references else None
 
