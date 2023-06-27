@@ -363,7 +363,7 @@ def post():
 
     references = extract_referenced_posts(message)
     parent_post = references.split(',')[0] if references else None
-    unique_id = None
+    #unique_id = None
     ip_address = request.remote_addr
 
     if ip_address not in user_ids:
