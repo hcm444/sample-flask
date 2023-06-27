@@ -343,7 +343,7 @@ def post():
     session = Session()
     message = request.form['message']
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-    unique_id = generate_unique_id(ip_address)
+    unique_id = ip_address #test
     references = extract_referenced_posts(message)
     parent_post = references.split(',')[0] if references else None
 
