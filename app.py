@@ -363,13 +363,13 @@ def post():
 
     references = extract_referenced_posts(message)
     parent_post = references.split(',')[0] if references else None
-    #unique_id = None
+    unique_id = None
     ip_address = request.remote_addr
 
-    #if ip_address not in user_ids:
+    if ip_address not in user_ids:
         # Generate a new user ID if it doesn't exist for the IP address
-    unique_id = generate_unique_id(ip_address)
-        #user_ids[ip_address] = unique_id
+        unique_id = generate_unique_id(ip_address)
+        user_ids[ip_address] = unique_id
 
 
 
@@ -469,7 +469,6 @@ def post():
 
     session.close()
     return redirect('/')
-
 
 
 if __name__ == '__main__':
