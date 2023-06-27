@@ -23,6 +23,8 @@ import hashlib
 
 nltk.download('punkt')
 post_counts = {}
+# Dictionary to store user IDs
+user_ids = {}
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
@@ -141,17 +143,10 @@ def find_least_original_user():
 
 
 def generate_unique_id(ip_address):
-    # Create a hash object using the SHA-1 hash function
-    hasher = hashlib.sha1()
-
-    # Update the hash object with the IP address
-    hasher.update(ip_address.encode('utf-8'))
-
-    # Get the hexadecimal representation of the hash digest
-    unique_id = hasher.hexdigest()
-
-    # Return the unique ID
-    return unique_id
+    # Generate a unique ID based on the IP address
+    md5_hash = hashlib.md5()
+    md5_hash.update(ip_address.encode('utf-8'))
+    return md5_hash.hexdigest()
 
 
 def calculate_sentiment(text):
@@ -365,10 +360,19 @@ def home():
 def post():
     session = Session()
     message = request.form['message']
-    ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-    unique_id = generate_unique_id(ip_address)
+
     references = extract_referenced_posts(message)
     parent_post = references.split(',')[0] if references else None
+    unique_id = None
+    ip_address = request.remote_addr
+
+    if ip_address not in user_ids:
+        # Generate a new user ID if it doesn't exist for the IP address
+        unique_id = generate_unique_id(ip_address)
+        user_ids[ip_address] = unique_id
+
+
+
 
     if len(message) > 500:
         session.close()
