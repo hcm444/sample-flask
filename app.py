@@ -12,11 +12,106 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sqlalchemy import text
 from nltk.sentiment import SentimentIntensityAnalyzer
+
 nltk.download('vader_lexicon')
 
 sia = SentimentIntensityAnalyzer()
 
 import hashlib
+
+nltk.download('punkt')
+post_counts = {}
+app = Flask(__name__)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+db_engine = create_engine('sqlite:///message_board.db')
+Base = declarative_base()
+Session = sessionmaker(bind=db_engine)
+Base.metadata.create_all(db_engine)
+POST_LIMIT_DURATION = timedelta(minutes=1)
+
+class Message(Base):
+    __tablename__ = 'messages'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    post_number = Column(Integer)
+    timestamp = Column(DateTime)
+    message = Column(String)
+    referenced_post = Column(String(length=200))
+    unique_id = Column(String)
+    parent_post = Column(Integer)
+
+
+
+
+
+def calculate_user_originality(user_id):
+    session = Session()
+
+    # Get all messages posted by the user
+    user_messages = session.query(Message).filter_by(unique_id=user_id).all()
+
+    if not user_messages:
+        session.close()
+        return None
+
+    # Calculate the originality score for each message
+    originality_scores = []
+    for message in user_messages:
+        existing_messages = [m.message for m in session.query(Message).all() if m != message]
+        originality_scores.append(calculate_originality(message.message, existing_messages))
+
+    session.close()
+
+    if originality_scores:
+        average_originality = sum(originality_scores) / len(originality_scores)
+        return average_originality
+
+    return None
+
+
+def find_most_original_user():
+    session = Session()
+
+    # Get all unique user IDs
+    unique_user_ids = session.query(Message.unique_id.distinct()).all()
+
+    user_originalities = []
+    for user_id in unique_user_ids:
+        originality = calculate_user_originality(user_id[0])
+        if originality is not None:
+            user_originalities.append((user_id[0], originality))
+
+    session.close()
+
+    if user_originalities:
+        # Sort the user originalities in descending order and return the most original user
+        user_originalities.sort(key=lambda x: x[1], reverse=True)
+        return user_originalities[0][0], user_originalities[0][1]
+
+    return None, None
+
+
+def find_least_original_user():
+    session = Session()
+
+    # Get all unique user IDs
+    unique_user_ids = session.query(Message.unique_id.distinct()).all()
+
+    user_originalities = []
+    for user_id in unique_user_ids:
+        originality = calculate_user_originality(user_id[0])
+        if originality is not None:
+            user_originalities.append((user_id[0], originality))
+
+    session.close()
+
+    if user_originalities:
+        # Sort the user originalities in ascending order and return the least original user
+        user_originalities.sort(key=lambda x: x[1])
+        return user_originalities[0][0], user_originalities[0][1]
+
+    return None, None
+
 
 def generate_unique_id(ip_address):
     # Convert the IP address to bytes
@@ -40,33 +135,6 @@ def generate_unique_id(ip_address):
 def calculate_sentiment(text):
     sentiment = sia.polarity_scores(text)['compound']
     return sentiment
-
-
-nltk.download('punkt')
-post_counts = {}
-app = Flask(__name__)
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
-
-db_engine = create_engine('sqlite:///message_board.db')
-Base = declarative_base()
-Session = sessionmaker(bind=db_engine)
-
-
-
-
-class Message(Base):
-    __tablename__ = 'messages'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    post_number = Column(Integer)
-    timestamp = Column(DateTime)
-    message = Column(String)
-    referenced_post = Column(String(length=200))
-    unique_id = Column(String)
-    parent_post = Column(Integer)
-
-
-
-Base.metadata.create_all(db_engine)
 
 
 def calculate_originality(new_post, existing_posts):
@@ -125,7 +193,7 @@ def extract_referenced_posts(message):
     return ','.join(valid_referenced_posts[:10])
 
 
-POST_LIMIT_DURATION = timedelta(minutes=1)
+
 
 
 def get_child_messages(messages, parent_id):
@@ -136,6 +204,7 @@ def get_child_messages(messages, parent_id):
             child_messages.append(message)
             child_messages.extend(get_child_messages(messages, message['post_number']))
     return child_messages
+
 
 # app.py
 
@@ -248,6 +317,19 @@ def post():
         post_number = total_posts + 1
 
     timestamp = datetime.now()
+
+    # Check if the message contains the special command for most original or least original users
+    if '>>most_original' in message:
+        most_original_user, most_original_score = find_most_original_user()
+        if most_original_user is not None and most_original_score is not None:
+            most_original_message = f"The most original user is {most_original_user} with an originality score of {most_original_score:.5f}"
+            message += '\n\n' + most_original_message
+
+    if '>>least_original' in message:
+        least_original_user, least_original_score = find_least_original_user()
+        if least_original_user is not None and least_original_score is not None:
+            least_original_message = f"The least original user is {least_original_user} with an originality score of {least_original_score:.5f}"
+            message += '\n\n' + least_original_message
 
     # Use a parameterized query to insert the new post
     query = text(
