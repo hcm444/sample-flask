@@ -113,21 +113,16 @@ def find_least_original_user():
 
 
 def generate_unique_id(ip_address):
-    # Convert the IP address to bytes
-    ip_bytes = ip_address.encode('utf-8')
+    # Create a hash object using the SHA-1 hash function
+    hasher = hashlib.sha1()
 
-    # Create a hash object using a cryptographic hash function (e.g., SHA256)
-    hasher = hashlib.sha256()
-
-    # Update the hash object with the IP address bytes
-    hasher.update(ip_bytes)
+    # Update the hash object with the IP address
+    hasher.update(ip_address.encode('utf-8'))
 
     # Get the hexadecimal representation of the hash digest
-    hash_code = hasher.hexdigest()
+    unique_id = hasher.hexdigest()
 
-    # Return the first 16 characters as the unique ID
-    unique_id = hash_code[:16]
-
+    # Return the unique ID
     return unique_id
 
 
@@ -343,7 +338,7 @@ def post():
     session = Session()
     message = request.form['message']
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-    unique_id = ip_address #test
+    unique_id = generate_unique_id(ip_address)
     references = extract_referenced_posts(message)
     parent_post = references.split(',')[0] if references else None
 
