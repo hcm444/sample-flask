@@ -1,4 +1,6 @@
 # Description: This file contains the code for the Flask application that runs the message board.
+import random
+
 from flask import Flask, render_template, request, redirect, jsonify
 
 from datetime import datetime, timedelta
@@ -41,6 +43,32 @@ class Message(Base):
 
 
 Base.metadata.create_all(db_engine)
+
+
+def generate_fortune():
+    fortunes = [
+        "All signs point to yes.",
+        "Don't count on it.",
+        "Outlook not so good.",
+        "You may rely on it.",
+        "Better not tell you now.",
+        "Reply hazy, try again.",
+        "It is certain.",
+        "Cannot predict now.",
+        "Yes, definitely.",
+        "My sources say no.",
+        "Signs point to yes.",
+        "Ask again later.",
+        "Very doubtful.",
+        "Most likely.",
+        "It is decidedly so.",
+        "Without a doubt.",
+        "Yes, definitely.",
+        "My reply is no.",
+        "Outlook good.",
+        "Concentrate and ask again."
+    ]
+    return random.choice(fortunes)
 
 
 def calculate_user_originality(user_id):
@@ -384,28 +412,31 @@ def post():
     if '>>most_original' in message:
         most_original_user, most_original_score = find_most_original_user()
         if most_original_user is not None and most_original_score is not None:
-            most_original_message = f"The most original user is {most_original_user} with an originality score of {most_original_score:.5f}"
+            most_original_message = f"{most_original_user} : {most_original_score:.5f}"
             message += '\n\n' + most_original_message
 
     if '>>least_original' in message:
         least_original_user, least_original_score = find_least_original_user()
         if least_original_user is not None and least_original_score is not None:
-            least_original_message = f"The least original user is {least_original_user} with an originality score of {least_original_score:.5f}"
+            least_original_message = f"{least_original_user} : {least_original_score:.5f}"
             message += '\n\n' + least_original_message
 
     if '>>most_sentimental' in message:
         most_sentimental_user, most_sentimental_score = find_most_sentimental_user()
         if most_sentimental_user is not None and most_sentimental_score is not None:
-            most_sentimental_score = round(most_sentimental_score, 5)
-            most_sentimental_message = f"The most sentimental user is {most_sentimental_user} with a sentiment score of {most_sentimental_score}."
+            most_sentimental_message = f"{most_sentimental_user} : {most_sentimental_score:.5f}"
             message += '\n\n' + most_sentimental_message
 
     if '>>least_sentimental' in message:
         least_sentimental_user, least_sentimental_score = find_least_sentimental_user()
         if least_sentimental_user is not None and least_sentimental_score is not None:
-            least_sentimental_score = round(least_sentimental_score, 5)
-            least_sentimental_message = f"The least sentimental user is {least_sentimental_user} with a sentiment score of {least_sentimental_score}."
+            least_sentimental_message = f"{least_sentimental_user} : {least_sentimental_score:.5f}"
             message += '\n\n' + least_sentimental_message
+
+    if '>>fortune' in message:
+        fortune = generate_fortune()
+        fortune_message = f"{fortune}."
+        message += '\n\n' + fortune_message
 
     # Use a parameterized query to insert the new post
     query = text(
