@@ -12,12 +12,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sqlalchemy import text
 from nltk.sentiment import SentimentIntensityAnalyzer
-
 nltk.download('vader_lexicon')
 
 sia = SentimentIntensityAnalyzer()
 
 import hashlib
+
+
+
 
 nltk.download('punkt')
 post_counts = {}
@@ -27,8 +29,9 @@ cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 db_engine = create_engine('sqlite:///message_board.db')
 Base = declarative_base()
 Session = sessionmaker(bind=db_engine)
-Base.metadata.create_all(db_engine)
-POST_LIMIT_DURATION = timedelta(minutes=1)
+
+
+
 
 class Message(Base):
     __tablename__ = 'messages'
@@ -42,6 +45,7 @@ class Message(Base):
 
 
 
+Base.metadata.create_all(db_engine)
 
 
 def calculate_user_originality(user_id):
@@ -112,7 +116,6 @@ def find_least_original_user():
 
     return None, None
 
-
 def generate_unique_id(ip_address):
     # Convert the IP address to bytes
     ip_bytes = ip_address.encode('utf-8')
@@ -135,8 +138,6 @@ def generate_unique_id(ip_address):
 def calculate_sentiment(text):
     sentiment = sia.polarity_scores(text)['compound']
     return sentiment
-
-
 def calculate_originality(new_post, existing_posts):
     # Combine new post and existing posts
     all_posts = existing_posts + [new_post]
@@ -193,7 +194,7 @@ def extract_referenced_posts(message):
     return ','.join(valid_referenced_posts[:10])
 
 
-
+POST_LIMIT_DURATION = timedelta(minutes=1)
 
 
 def get_child_messages(messages, parent_id):
@@ -204,7 +205,6 @@ def get_child_messages(messages, parent_id):
             child_messages.append(message)
             child_messages.extend(get_child_messages(messages, message['post_number']))
     return child_messages
-
 
 # app.py
 
