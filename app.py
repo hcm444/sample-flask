@@ -12,14 +12,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sqlalchemy import text
 from nltk.sentiment import SentimentIntensityAnalyzer
+
 nltk.download('vader_lexicon')
 
 sia = SentimentIntensityAnalyzer()
 
 import hashlib
-
-
-
 
 nltk.download('punkt')
 post_counts = {}
@@ -31,8 +29,6 @@ Base = declarative_base()
 Session = sessionmaker(bind=db_engine)
 
 
-
-
 class Message(Base):
     __tablename__ = 'messages'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -42,7 +38,6 @@ class Message(Base):
     referenced_post = Column(String(length=200))
     unique_id = Column(String)
     parent_post = Column(Integer)
-
 
 
 Base.metadata.create_all(db_engine)
@@ -116,6 +111,7 @@ def find_least_original_user():
 
     return None, None
 
+
 def generate_unique_id(ip_address):
     # Convert the IP address to bytes
     ip_bytes = ip_address.encode('utf-8')
@@ -138,6 +134,76 @@ def generate_unique_id(ip_address):
 def calculate_sentiment(text):
     sentiment = sia.polarity_scores(text)['compound']
     return sentiment
+
+
+def calculate_user_sentiment(user_id):
+    session = Session()
+
+    # Get all messages posted by the user
+    user_messages = session.query(Message).filter_by(unique_id=user_id).all()
+
+    if not user_messages:
+        session.close()
+        return None
+
+    # Calculate the sentiment score for each message
+    sentiment_scores = []
+    for message in user_messages:
+        sentiment_scores.append(calculate_sentiment(message.message))
+
+    session.close()
+
+    if sentiment_scores:
+        average_sentiment = sum(sentiment_scores) / len(sentiment_scores)
+        return average_sentiment
+
+    return None
+
+
+def find_most_sentimental_user():
+    session = Session()
+
+    # Get all unique user IDs
+    unique_user_ids = session.query(Message.unique_id.distinct()).all()
+
+    user_sentiments = []
+    for user_id in unique_user_ids:
+        sentiment = calculate_user_sentiment(user_id[0])
+        if sentiment is not None:
+            user_sentiments.append((user_id[0], sentiment))
+
+    session.close()
+
+    if user_sentiments:
+        # Sort the user sentiments in descending order and return the most sentimental user
+        user_sentiments.sort(key=lambda x: x[1], reverse=True)
+        return user_sentiments[0][0], user_sentiments[0][1]
+
+    return None, None
+
+
+def find_least_sentimental_user():
+    session = Session()
+
+    # Get all unique user IDs
+    unique_user_ids = session.query(Message.unique_id.distinct()).all()
+
+    user_sentiments = []
+    for user_id in unique_user_ids:
+        sentiment = calculate_user_sentiment(user_id[0])
+        if sentiment is not None:
+            user_sentiments.append((user_id[0], sentiment))
+
+    session.close()
+
+    if user_sentiments:
+        # Sort the user sentiments in ascending order and return the least sentimental user
+        user_sentiments.sort(key=lambda x: x[1])
+        return user_sentiments[0][0], user_sentiments[0][1]
+
+    return None, None
+
+
 def calculate_originality(new_post, existing_posts):
     # Combine new post and existing posts
     all_posts = existing_posts + [new_post]
@@ -205,6 +271,7 @@ def get_child_messages(messages, parent_id):
             child_messages.append(message)
             child_messages.extend(get_child_messages(messages, message['post_number']))
     return child_messages
+
 
 # app.py
 
@@ -330,6 +397,20 @@ def post():
         if least_original_user is not None and least_original_score is not None:
             least_original_message = f"The least original user is {least_original_user} with an originality score of {least_original_score:.5f}"
             message += '\n\n' + least_original_message
+
+    if '>>most_sentimental' in message:
+        most_sentimental_user, most_sentimental_score = find_most_sentimental_user()
+        if most_sentimental_user is not None and most_sentimental_score is not None:
+            most_sentimental_score = round(most_sentimental_score, 5)
+            most_sentimental_message = f"The most sentimental user is {most_sentimental_user} with a sentiment score of {most_sentimental_score}."
+            message += '\n\n' + most_sentimental_message
+
+    if '>>least_sentimental' in message:
+        least_sentimental_user, least_sentimental_score = find_least_sentimental_user()
+        if least_sentimental_user is not None and least_sentimental_score is not None:
+            least_sentimental_score = round(least_sentimental_score, 5)
+            least_sentimental_message = f"The least sentimental user is {least_sentimental_user} with a sentiment score of {least_sentimental_score}."
+            message += '\n\n' + least_sentimental_message
 
     # Use a parameterized query to insert the new post
     query = text(
