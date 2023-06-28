@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>404 - Page Not Found</title>
+    <style>
+        body {
+            background-color: black;
+            color: green;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin-top: 20%;
+        }
+        canvas {
+            border: 1px solid green;
+        }
+    </style>
+</head>
+<body>
+    <h1>404 - Page Not Found</h1>
+    <canvas id="gameOfLifeCanvas" width="400" height="400"></canvas>
+
+    <script>
+        // JavaScript code for the Game of Life simulation
+        const canvas = document.getElementById("gameOfLifeCanvas");
+        const context = canvas.getContext("2d");
+        const cellSize = 10;
+        const canvasSize = 400;
+        const rows = canvasSize / cellSize;
+        const columns = canvasSize / cellSize;
+        const generationDelay = 200; // Delay between generations in milliseconds
+
+        let grid = createEmptyGrid();
+
+        document.addEventListener("DOMContentLoaded", initialize);
+
+        function initialize() {
+            drawGrid();
+            setupRandomInitialState();
+            startGame();
+        }
+
+        function createEmptyGrid() {
+            return Array.from({ length: rows }, () => Array.from({ length: columns }, () => 0));
+        }
+
+        function drawCell(row, col) {
+            context.fillStyle = "green";
+            context.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+
+        function drawGrid() {
+            context.clearRect(0, 0, canvasSize, canvasSize);
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < columns; col++) {
+                    if (grid[row][col] === 1) {
+                        drawCell(row, col);
+                    }
+                }
+            }
+        }
+
+        function setupRandomInitialState() {
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < columns; col++) {
+                    grid[row][col] = Math.floor(Math.random() * 2);
+                }
+            }
+        }
+
+        function getNextGeneration() {
+            const nextGeneration = createEmptyGrid();
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < columns; col++) {
+                    const cell = grid[row][col];
+                    const liveNeighbors = countLiveNeighbors(row, col);
+
+                    if (cell === 1) {
+                        // Any live cell with fewer than two live neighbors dies (underpopulation)
+                        // Any live cell with two or three live neighbors lives on to the next generation
+                        // Any live cell with more than three live neighbors dies (overpopulation)
+                        if (liveNeighbors < 2 || liveNeighbors > 3) {
+                            nextGeneration[row][col] = 0;
+                        } else {
+                            nextGeneration[row][col] = 1;
+                        }
+                    } else {
+                        // Any dead cell with exactly three live neighbors becomes a live cell (reproduction)
+                        if (liveNeighbors === 3) {
+                            nextGeneration[row][col] = 1;
+                        }
+                    }
+                }
+            }
+
+            return nextGeneration;
+        }
+
+        function countLiveNeighbors(row, col) {
+            let liveNeighbors = 0;
+
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    if (i === 0 && j === 0) continue; // Skip the current cell
+
+                    const neighborRow = (row + i + rows) % rows; // Wrap around to the opposite side if out of bounds
+                    const neighborCol = (col + j + columns) % columns; // Wrap around to the opposite side if out of bounds
+
+                    liveNeighbors += grid[neighborRow][neighborCol];
+                }
+            }
+
+            return liveNeighbors;
+        }
+
+        function updateGrid() {
+            grid = getNextGeneration();
+        }
+
+        function startGame() {
+            setInterval(() => {
+                updateGrid();
+                drawGrid();
+            }, generationDelay);
+        }
+    </script>
+</body>
+</html>

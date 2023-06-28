@@ -297,6 +297,9 @@ def get_child_messages(messages, parent_id):
 
 
 # app.py
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html', error='404 - Page not found'), 404
 
 @app.route('/chart')
 @cache.cached(timeout=60)
