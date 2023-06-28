@@ -382,12 +382,6 @@ def post():
         session.close()
         return jsonify({'error': 'Error: This message already exists.'})
 
-    if ip_address not in post_counts:
-        post_counts[ip_address] = {'count': 1, 'timestamp': datetime.now()}
-    else:
-        post_counts[ip_address]['count'] += 1
-        post_counts[ip_address]['timestamp'] = datetime.now()
-
     if ip_address in post_counts:
         count = post_counts[ip_address]['count']
         timestamp = post_counts[ip_address]['timestamp']
@@ -466,8 +460,15 @@ def post():
     for referenced_post in references.split(','):
         update_referenced_post(referenced_post, post_number)
 
+    if ip_address not in post_counts:
+        post_counts[ip_address] = {'count': 1, 'timestamp': datetime.now()}
+    else:
+        post_counts[ip_address]['count'] += 1
+        post_counts[ip_address]['timestamp'] = datetime.now()
+
     session.close()
     return redirect('/')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
