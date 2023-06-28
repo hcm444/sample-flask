@@ -369,13 +369,17 @@ def post():
     session = Session()
     message = request.form['message']
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-    unique_id = generate_unique_id(ip_address)
+
     references = extract_referenced_posts(message)
     parent_post = references.split(',')[0] if references else None
 
     if len(message) > 500:
         session.close()
         return jsonify({'error': 'Error: Message should not exceed 500 characters.'})
+
+    if len(message) == 0:
+        session.close()
+        return jsonify({'error': 'Error: Message should not be 0 characters.'})
 
     existing_message = session.query(Message).filter_by(message=message).first()
     if existing_message:
@@ -446,6 +450,7 @@ def post():
         "INSERT INTO messages (post_number, timestamp, message, referenced_post, unique_id, parent_post) "
         "VALUES (:post_number, :timestamp, :message, :referenced_post, :unique_id, :parent_post)"
     )
+    unique_id = generate_unique_id(ip_address)
     params = {
         'post_number': post_number,
         'timestamp': timestamp,
