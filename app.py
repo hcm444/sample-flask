@@ -1,5 +1,5 @@
 # Description: This file contains the code for the Flask application that runs the message board.
-import random
+
 
 from flask import Flask, render_template, request, redirect, jsonify
 
@@ -15,6 +15,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sqlalchemy import text
 from nltk.sentiment import SentimentIntensityAnalyzer
 
+import random
 nltk.download('vader_lexicon')
 
 sia = SentimentIntensityAnalyzer()
@@ -140,6 +141,7 @@ def find_least_original_user():
     return None, None
 
 
+
 def generate_unique_id(ip_address):
     # Create a hash object using the SHA-1 hash function
     hasher = hashlib.sha1()
@@ -150,8 +152,18 @@ def generate_unique_id(ip_address):
     # Get the hexadecimal representation of the hash digest
     unique_id = hasher.hexdigest()
 
-    # Return the unique ID
-    return unique_id
+    # Take the first 8 characters of the unique ID
+    truncated_id = unique_id[:8]
+
+    # Select a random oceanic animal
+    animal = "prawn"
+
+    # Concatenate the truncated ID with the oceanic animal string
+    final_id = animal + truncated_id
+
+    # Return the final ID
+    return final_id
+
 
 
 def calculate_sentiment(text):
