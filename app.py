@@ -463,6 +463,7 @@ def post():
         "VALUES (:post_number, :timestamp, :message, :referenced_post, :unique_id, :parent_post)"
     )
     unique_id = generate_unique_id(ip_address)
+    print(ip_address, unique_id)
     params = {
         'post_number': post_number,
         'timestamp': timestamp,
