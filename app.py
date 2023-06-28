@@ -1,25 +1,30 @@
 # Description: This file contains the code for the Flask application that runs the message board.
-import random
 
 from flask import Flask, render_template, request, redirect, jsonify
 
 from datetime import datetime, timedelta
-import re
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from flask_caching import Cache
 import nltk
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from sqlalchemy import text
 from nltk.sentiment import SentimentIntensityAnalyzer
+from calculate_originality import calculate_originality
+from calculate_sentiment import calculate_sentiment
+from extract_referenced_posts import extract_referenced_posts
+from find_least_original_user import find_least_original_user
+from find_least_sentimental_user import find_least_sentimental_user
+from find_most_original_user import find_most_original_user
+from find_most_sentimental_user import find_most_sentimental_user
+from gemerate_fortune import generate_fortune
+from generate_unique_id import generate_unique_id
+from get_child_messages import get_child_messages
+from update_referenced_post import update_referenced_post
 
 nltk.download('vader_lexicon')
 
 sia = SentimentIntensityAnalyzer()
-
-import hashlib
 
 nltk.download('punkt')
 post_counts = {}
@@ -44,256 +49,7 @@ class Message(Base):
 
 Base.metadata.create_all(db_engine)
 
-
-def generate_fortune():
-    fortunes = [
-        "All signs point to yes.",
-        "Don't count on it.",
-        "Outlook not so good.",
-        "You may rely on it.",
-        "Better not tell you now.",
-        "Reply hazy, try again.",
-        "It is certain.",
-        "Cannot predict now.",
-        "Yes, definitely.",
-        "My sources say no.",
-        "Signs point to yes.",
-        "Ask again later.",
-        "Very doubtful.",
-        "Most likely.",
-        "It is decidedly so.",
-        "Without a doubt.",
-        "Yes, definitely.",
-        "My reply is no.",
-        "Outlook good.",
-        "Concentrate and ask again."
-    ]
-    return random.choice(fortunes)
-
-
-def calculate_user_originality(user_id):
-    session = Session()
-
-    # Get all messages posted by the user
-    user_messages = session.query(Message).filter_by(unique_id=user_id).all()
-
-    if not user_messages:
-        session.close()
-        return None
-
-    # Calculate the originality score for each message
-    originality_scores = []
-    for message in user_messages:
-        existing_messages = [m.message for m in session.query(Message).all() if m != message]
-        originality_scores.append(calculate_originality(message.message, existing_messages))
-
-    session.close()
-
-    if originality_scores:
-        average_originality = sum(originality_scores) / len(originality_scores)
-        return average_originality
-
-    return None
-
-
-def find_most_original_user():
-    session = Session()
-
-    # Get all unique user IDs
-    unique_user_ids = session.query(Message.unique_id.distinct()).all()
-
-    user_originalities = []
-    for user_id in unique_user_ids:
-        originality = calculate_user_originality(user_id[0])
-        if originality is not None:
-            user_originalities.append((user_id[0], originality))
-
-    session.close()
-
-    if user_originalities:
-        # Sort the user originalities in descending order and return the most original user
-        user_originalities.sort(key=lambda x: x[1], reverse=True)
-        return user_originalities[0][0], user_originalities[0][1]
-
-    return None, None
-
-
-def find_least_original_user():
-    session = Session()
-
-    # Get all unique user IDs
-    unique_user_ids = session.query(Message.unique_id.distinct()).all()
-
-    user_originalities = []
-    for user_id in unique_user_ids:
-        originality = calculate_user_originality(user_id[0])
-        if originality is not None:
-            user_originalities.append((user_id[0], originality))
-
-    session.close()
-
-    if user_originalities:
-        # Sort the user originalities in ascending order and return the least original user
-        user_originalities.sort(key=lambda x: x[1])
-        return user_originalities[0][0], user_originalities[0][1]
-
-    return None, None
-
-
-def generate_unique_id(ip_address):
-    # Create a hash object using the SHA-1 hash function
-    hasher = hashlib.sha1()
-
-    # Update the hash object with the IP address
-    hasher.update(ip_address.encode('utf-8'))
-
-    # Get the hexadecimal representation of the hash digest
-    unique_id = hasher.hexdigest()
-
-    # Return the unique ID
-    return unique_id
-
-
-def calculate_sentiment(text):
-    sentiment = sia.polarity_scores(text)['compound']
-    return sentiment
-
-
-def calculate_user_sentiment(user_id):
-    session = Session()
-
-    # Get all messages posted by the user
-    user_messages = session.query(Message).filter_by(unique_id=user_id).all()
-
-    if not user_messages:
-        session.close()
-        return None
-
-    # Calculate the sentiment score for each message
-    sentiment_scores = []
-    for message in user_messages:
-        sentiment_scores.append(calculate_sentiment(message.message))
-
-    session.close()
-
-    if sentiment_scores:
-        average_sentiment = sum(sentiment_scores) / len(sentiment_scores)
-        return average_sentiment
-
-    return None
-
-
-def find_most_sentimental_user():
-    session = Session()
-
-    # Get all unique user IDs
-    unique_user_ids = session.query(Message.unique_id.distinct()).all()
-
-    user_sentiments = []
-    for user_id in unique_user_ids:
-        sentiment = calculate_user_sentiment(user_id[0])
-        if sentiment is not None:
-            user_sentiments.append((user_id[0], sentiment))
-
-    session.close()
-
-    if user_sentiments:
-        # Sort the user sentiments in descending order and return the most sentimental user
-        user_sentiments.sort(key=lambda x: x[1], reverse=True)
-        return user_sentiments[0][0], user_sentiments[0][1]
-
-    return None, None
-
-
-def find_least_sentimental_user():
-    session = Session()
-
-    # Get all unique user IDs
-    unique_user_ids = session.query(Message.unique_id.distinct()).all()
-
-    user_sentiments = []
-    for user_id in unique_user_ids:
-        sentiment = calculate_user_sentiment(user_id[0])
-        if sentiment is not None:
-            user_sentiments.append((user_id[0], sentiment))
-
-    session.close()
-
-    if user_sentiments:
-        # Sort the user sentiments in ascending order and return the least sentimental user
-        user_sentiments.sort(key=lambda x: x[1])
-        return user_sentiments[0][0], user_sentiments[0][1]
-
-    return None, None
-
-
-def calculate_originality(new_post, existing_posts):
-    # Combine new post and existing posts
-    all_posts = existing_posts + [new_post]
-
-    # Tokenize posts into sentences
-    tokenized_posts = [nltk.sent_tokenize(post) for post in all_posts]
-
-    # Flatten the list of sentences
-    flattened_posts = [sentence for post in tokenized_posts for sentence in post]
-
-    # Create a TF-IDF vectorizer
-    vectorizer = TfidfVectorizer()
-
-    # Compute the TF-IDF matrix
-    tfidf_matrix = vectorizer.fit_transform(flattened_posts)
-
-    # Calculate the cosine similarity between the new post and existing posts
-    similarity_matrix = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])
-
-    # Calculate the average similarity
-    average_similarity = similarity_matrix.mean()
-
-    # Calculate the originality score
-    originality_score = 1 - average_similarity
-
-    return originality_score
-
-
-def update_referenced_post(referenced_post, post_number):
-    if referenced_post:
-        session = Session()
-        message = session.query(Message).filter_by(post_number=int(referenced_post)).first()
-        if message:
-            referenced_posts = message.referenced_post.split(',') if message.referenced_post else []
-            if str(post_number) not in referenced_posts:
-                # Limit the number of referenced posts to 10
-                referenced_posts.append(str(post_number))
-                referenced_posts = referenced_posts[-10:]
-                message.referenced_post = ','.join(referenced_posts)
-        session.commit()
-        session.close()
-
-
-def extract_referenced_posts(message):
-    referenced_posts = re.findall(r'>>(\d{1,14})', message)
-
-    session = Session()
-    existing_post_numbers = [str(post[0]) for post in session.query(Message.post_number).all()]
-    session.close()
-
-    # Filter out referenced post numbers that don't exist in the database
-    valid_referenced_posts = [post for post in referenced_posts if post in existing_post_numbers]
-
-    return ','.join(valid_referenced_posts[:10])
-
-
 POST_LIMIT_DURATION = timedelta(minutes=1)
-
-
-def get_child_messages(messages, parent_id):
-    # Recursive function to get child messages for a given parent ID
-    child_messages = []
-    for message in messages:
-        if message['parent_post'] == parent_id:
-            child_messages.append(message)
-            child_messages.extend(get_child_messages(messages, message['post_number']))
-    return child_messages
 
 
 # app.py
