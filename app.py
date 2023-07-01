@@ -14,15 +14,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sqlalchemy import text
 from nltk.sentiment import SentimentIntensityAnalyzer
-
+import hashlib
 import random
+
 nltk.download('vader_lexicon')
+nltk.download('punkt')
 
 sia = SentimentIntensityAnalyzer()
 
-import hashlib
-
-nltk.download('punkt')
 post_counts = {}
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -141,7 +140,6 @@ def find_least_original_user():
     return None, None
 
 
-
 def generate_unique_id(ip_address):
     # Create a hash object using the SHA-1 hash function
     hasher = hashlib.sha1()
@@ -163,7 +161,6 @@ def generate_unique_id(ip_address):
 
     # Return the final ID
     return final_id
-
 
 
 def calculate_sentiment(text):
@@ -312,6 +309,7 @@ def get_child_messages(messages, parent_id):
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html', error='404 - Page not found'), 404
+
 
 @app.route('/chart')
 @cache.cached(timeout=60)
