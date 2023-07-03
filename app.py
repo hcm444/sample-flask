@@ -1,5 +1,8 @@
 # Description: This file contains the code for the Flask application that runs the message board.
+import webbrowser
 
+
+session_data = {}
 
 from flask import Flask, render_template, request, redirect, jsonify
 
@@ -310,6 +313,25 @@ def get_child_messages(messages, parent_id):
 def page_not_found(e):
     return render_template('404.html', error='404 - Page not found'), 404
 
+@app.route('/snake')
+def snake():
+    return render_template('snake.html')
+
+@app.route("/save_high_score", methods=["POST"])
+def save_high_score():
+    high_score = request.json.get("score")
+    ip_address = request.remote_addr
+    winner_id = generate_unique_id(ip_address)
+    print(ip_address, winner_id, high_score)
+
+    # Update the highest score and unique ID if necessary
+    if high_score > session_data.get("highest_score", 0):
+        session_data["highest_score"] = high_score
+        session_data["winner_id"] = winner_id
+
+    return jsonify({"highest_score": session_data.get("highest_score"), "winner_id": session_data.get("winner_id")})
+
+
 
 @app.route('/chart')
 @cache.cached(timeout=60)
@@ -347,6 +369,10 @@ def chart():
 @cache.cached(timeout=60)
 def home():
     session = Session()
+    highest_score = session_data.get("highest_score")
+    winner_id = session_data.get("winner_id")
+
+
     messages = session.query(Message).all()
     messages_dict = [
         {
@@ -358,7 +384,6 @@ def home():
             'unique_id': message.unique_id,
             'parent_post': message.parent_post,  # Add parent_post field
             'sentiment': calculate_sentiment(message.message)  # Use sentiment labels
-
         }
         for message in messages
     ]
@@ -371,8 +396,7 @@ def home():
         threaded_messages.append(root_message)
 
     session.close()
-    return render_template('index.html', messages=threaded_messages)
-
+    return render_template('index.html', messages=threaded_messages, highest_score=highest_score, winner_id=winner_id)
 
 @app.route('/post', methods=['POST'])
 def post():
