@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  background-color: black;
+  color: #0F0;
+}
+
+form {
+  margin-top: 50px;
+}
+
+form p {
+  margin-bottom: 10px;
+}
+
+input[type="email"],
+input[type="password"] {
+  background-color: black;
+  color: #0F0;
+  border: 1px solid #0F0;
+  padding: 5px;
+}
+
+input[type="email"] {
+  color: #0F0;
+}
+
+input[type="submit"] {
+  background-color: #0F0;
+  color: black;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+a {
+  color: #0F0;
+}
+
+span {
+  color: red;
+}
+</style>
+</head>
+<body>
+  <h1>Sign In</h1>
+  <p>New User? <a href="{{ url_for('register') }}">Click to Register!</a></p>
+  <form action="" method="post">
+    {{ form.hidden_tag() }}
+    <p>
+      <label>{{ form.email.label }}</label><br>
+      <input type="email" name="email" style="background-color: black; color: #0F0; border: 1px solid #0F0; padding: 5px;">
+      <br>
+      {% for error in form.email.errors %}
+      <span>[{{ error }}]</span>
+      {% endfor %}
+    </p>
+    <p>
+      <label>{{ form.password.label }}</label><br>
+      {{ form.password(size=32) }}<br>
+      {% for error in form.password.errors %}
+      <span>[{{ error }}]</span>
+      {% endfor %}
+    </p>
+    <p>{{ form.remember() }} {{ form.remember.label }}</p>
+    <p>{{ form.submit() }}</p>
+  </form>
+</body>
+</html>
