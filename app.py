@@ -18,7 +18,7 @@ from sqlalchemy import text
 from nltk.sentiment import SentimentIntensityAnalyzer
 import hashlib
 import random
-from flask import UserMixin, LoginManager, login_required, login_user, current_user, logout_user
+from flask_login import UserMixin, LoginManager, login_required, login_user, current_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField
