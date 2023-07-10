@@ -1,9 +1,10 @@
 # Description: This file contains the code for the Flask application that runs the message board.
 import webbrowser
 
+
 session_data = {}
 
-from flask import Flask, render_template, request, redirect, jsonify, flash
+from flask import Flask, render_template, request, redirect, jsonify
 
 from datetime import datetime, timedelta
 import re
@@ -18,11 +19,6 @@ from sqlalchemy import text
 from nltk.sentiment import SentimentIntensityAnalyzer
 import hashlib
 import random
-from flask_login import UserMixin, LoginManager, login_required, login_user, current_user, logout_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Email, EqualTo
 
 nltk.download('vader_lexicon')
 nltk.download('punkt')
@@ -31,50 +27,11 @@ sia = SentimentIntensityAnalyzer()
 
 post_counts = {}
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'bigpeen'
-
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 db_engine = create_engine('sqlite:///message_board.db')
 Base = declarative_base()
 Session = sessionmaker(bind=db_engine)
-
-
-class User(Base, UserMixin):
-    __tablename__ = 'users'
-    id = Column(Integer, primary_key=True)
-    username = Column(String(64), index=True, unique=True)
-    email = Column(String(120), unique=True, index=True)
-    password_hash = Column(String(128))
-    Session = sessionmaker(bind=db_engine)
-    db_session = Session()
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    @staticmethod
-    def query():
-        Session = sessionmaker(bind=db_engine)
-        db_session = Session()
-        return db_session.query(User)
-
-
-class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Register')
-
-
-class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    remember = BooleanField('Remember Me')
-    submit = SubmitField('Login')
 
 
 class Message(Base):
@@ -88,55 +45,7 @@ class Message(Base):
     parent_post = Column(Integer)
 
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-
 Base.metadata.create_all(db_engine)
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    Session = sessionmaker(bind=db_engine)
-    db_session = Session()
-    return db_session.query(User).get(int(user_id))
-
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
-        Session = sessionmaker(bind=db_engine)
-        db_session = Session()
-        db_session.add(user)
-        db_session.commit()
-        flash('Registration successful. Please log in.')
-        return redirect('/login')
-    return render_template('register.html', title='Register', form=form)
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        Session = sessionmaker(bind=db_engine)
-        db_session = Session()
-        user = db_session.query(User).filter_by(email=form.email.data).first()
-        if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember.data)
-            next_page = request.args.get('next')
-            return redirect(next_page or '/')
-        else:
-            flash('Invalid email or password.')
-    return render_template('login.html', title='Login', form=form)
-
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect('/index')
 
 
 def generate_fortune():
@@ -404,11 +313,9 @@ def get_child_messages(messages, parent_id):
 def page_not_found(e):
     return render_template('404.html', error='404 - Page not found'), 404
 
-
 @app.route('/snake')
 def snake():
     return render_template('snake.html')
-
 
 @app.route("/save_high_score", methods=["POST"])
 def save_high_score():
@@ -423,6 +330,7 @@ def save_high_score():
         session_data["winner_id"] = winner_id
 
     return jsonify({"highest_score": session_data.get("highest_score"), "winner_id": session_data.get("winner_id")})
+
 
 
 @app.route('/chart')
@@ -458,44 +366,39 @@ def chart():
 
 
 @app.route('/')
+@cache.cached(timeout=60)
 def home():
-    if current_user.is_authenticated:
-        # User is logged in, show the message board
-        session = Session()
-        highest_score = session_data.get("highest_score")
-        winner_id = session_data.get("winner_id")
+    session = Session()
+    highest_score = session_data.get("highest_score")
+    winner_id = session_data.get("winner_id")
 
-        messages = session.query(Message).all()
-        messages_dict = [
-            {
-                'post_number': message.post_number,
-                'timestamp': message.timestamp,
-                'message': message.message,
-                'referenced_by': message.referenced_post.split(',') if message.referenced_post else None,
-                'originality': "{:.5f}".format(calculate_originality(message.message, [m.message for m in messages])),
-                'unique_id': message.unique_id,
-                'parent_post': message.parent_post,
-                'sentiment': calculate_sentiment(message.message)
-            }
-            for message in messages
-        ]
 
-        root_messages = [message for message in messages_dict if message['parent_post'] is None]
-        threaded_messages = []
-        for root_message in root_messages:
-            root_message['replies'] = get_child_messages(messages_dict, root_message['post_number'])
-            threaded_messages.append(root_message)
+    messages = session.query(Message).all()
+    messages_dict = [
+        {
+            'post_number': message.post_number,
+            'timestamp': message.timestamp,
+            'message': message.message,
+            'referenced_by': message.referenced_post.split(',') if message.referenced_post else None,
+            'originality': "{:.5f}".format(calculate_originality(message.message, [m.message for m in messages])),
+            'unique_id': message.unique_id,
+            'parent_post': message.parent_post,  # Add parent_post field
+            'sentiment': calculate_sentiment(message.message)  # Use sentiment labels
+        }
+        for message in messages
+    ]
 
-        session.close()
-        return render_template('index.html', messages=threaded_messages, highest_score=highest_score,
-                               winner_id=winner_id)
-    else:
-        # User is not logged in, redirect to the login page
-        return redirect('/login')
+    # Build a hierarchical structure of messages based on parent-child relationship
+    root_messages = [message for message in messages_dict if message['parent_post'] is None]
+    threaded_messages = []
+    for root_message in root_messages:
+        root_message['replies'] = get_child_messages(messages_dict, root_message['post_number'])
+        threaded_messages.append(root_message)
 
+    session.close()
+    return render_template('index.html', messages=threaded_messages, highest_score=highest_score, winner_id=winner_id)
 
 @app.route('/post', methods=['POST'])
-@login_required
 def post():
     session = Session()
     message = request.form['message']
