@@ -132,7 +132,6 @@ def login():
     return render_template('login.html', title='Login', form=form)
 
 
-
 @app.route('/logout')
 @login_required
 def logout():
@@ -488,7 +487,8 @@ def home():
             threaded_messages.append(root_message)
 
         session.close()
-        return render_template('index.html', messages=threaded_messages, highest_score=highest_score, winner_id=winner_id)
+        return render_template('index.html', messages=threaded_messages, highest_score=highest_score,
+                               winner_id=winner_id)
     else:
         # User is not logged in, redirect to the login page
         return redirect('/login')
