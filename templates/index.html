@@ -303,7 +303,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     {% for reply in message['replies'] %}
                     <li class="reply-item">
                         <div class="post-container">
-
                             #{{ reply['post_number'] }}<br>
                             {{ reply['timestamp'] }}<br>
                             <div class="originality-sentiment hidden">
