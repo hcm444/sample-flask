@@ -1,11 +1,6 @@
-# Description: This file contains the code for the Flask application that runs the message board.
-import webbrowser
-
 
 session_data = {}
-
 from flask import Flask, render_template, request, redirect, jsonify
-
 from datetime import datetime, timedelta
 import re
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
@@ -17,7 +12,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sqlalchemy import text
 from nltk.sentiment import SentimentIntensityAnalyzer
-import hashlib
 import random
 
 nltk.download('vader_lexicon')
@@ -73,43 +67,26 @@ def generate_fortune():
     return random.choice(fortunes)
 
 
-
-
-
-
-
 def calculate_sentiment(text):
     sentiment = sia.polarity_scores(text)['compound']
     return sentiment
 
 
-
-
-
-
 def calculate_originality(new_post, existing_posts):
-    # Combine new post and existing posts
     all_posts = existing_posts + [new_post]
 
-    # Tokenize posts into sentences
     tokenized_posts = [nltk.sent_tokenize(post) for post in all_posts]
 
-    # Flatten the list of sentences
     flattened_posts = [sentence for post in tokenized_posts for sentence in post]
 
-    # Create a TF-IDF vectorizer
     vectorizer = TfidfVectorizer()
 
-    # Compute the TF-IDF matrix
     tfidf_matrix = vectorizer.fit_transform(flattened_posts)
 
-    # Calculate the cosine similarity between the new post and existing posts
     similarity_matrix = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])
 
-    # Calculate the average similarity
     average_similarity = similarity_matrix.mean()
 
-    # Calculate the originality score
     originality_score = 1 - average_similarity
 
     return originality_score
@@ -161,9 +138,11 @@ def get_child_messages(messages, parent_id):
 def page_not_found(e):
     return render_template('404.html', error='404 - Page not found'), 404
 
+
 @app.route('/snake')
 def snake():
     return render_template('snake.html')
+
 
 @app.route("/save_high_score", methods=["POST"])
 def save_high_score():
@@ -171,14 +150,10 @@ def save_high_score():
     ip_address = request.remote_addr
 
     print(ip_address, high_score)
-
-    # Update the highest score and unique ID if necessary
     if high_score > session_data.get("highest_score", 0):
         session_data["highest_score"] = high_score
 
     return jsonify({"highest_score": session_data.get("highest_score"), "winner_id": session_data.get("winner_id")})
-
-
 
 
 @app.route('/')
@@ -187,7 +162,6 @@ def home():
     session = Session()
     highest_score = session_data.get("highest_score")
     winner_id = session_data.get("winner_id")
-
 
     messages = session.query(Message).all()
     messages_dict = [
@@ -212,6 +186,7 @@ def home():
 
     session.close()
     return render_template('index.html', messages=threaded_messages, highest_score=highest_score, winner_id=winner_id)
+
 
 @app.route('/post', methods=['POST'])
 def post():
