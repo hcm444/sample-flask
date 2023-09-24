@@ -157,7 +157,7 @@ def generate_unique_id(ip_address):
     truncated_id = unique_id[:8]
 
     # Select a random oceanic animal
-    animal = "prawn"
+    animal = "noob"
 
     # Concatenate the truncated ID with the oceanic animal string
     final_id = animal + truncated_id
