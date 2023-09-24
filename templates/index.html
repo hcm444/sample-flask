@@ -323,30 +323,6 @@ document.addEventListener("DOMContentLoaded", function() {
             {% endfor %}
         </ul>
 
-        <!-- Add pagination links at the bottom of the message list -->
-<div class="pagination is-centered" role="navigation" aria-label="pagination">
-    {% if has_previous %}
-    <a class="pagination-previous" href="{{ url_for('home', page=page-1) }}">Previous</a>
-    {% else %}
-    <a class="pagination-previous" disabled>Previous</a>
-    {% endif %}
-
-    <ul class="pagination-list">
-        {% for page_num in range(1, total_pages + 1) %}
-        <li>
-            <a class="pagination-link {% if page_num == page %}is-current{% endif %}"
-               href="{{ url_for('home', page=page_num) }}">{{ page_num }}</a>
-        </li>
-        {% endfor %}
-    </ul>
-
-    {% if has_next %}
-    <a class="pagination-next" href="{{ url_for('home', page=page+1) }}">Next</a>
-    {% else %}
-    <a class="pagination-next" disabled>Next</a>
-    {% endif %}
-</div>
-
 
         <div class="center">
             <a href="https://github.com/hcm444/sample-flask">GitHub Repository</a>

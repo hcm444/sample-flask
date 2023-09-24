@@ -158,19 +158,12 @@ def save_high_score():
 @app.route('/')
 @cache.cached(timeout=60)
 def home():
-    # Get the current page number from the query parameters, default to page 1 if not provided
-    page = request.args.get('page', default=1, type=int)
-    messages_per_page = 10  # Adjust this number as per your preference
 
     session = Session()
     highest_score = session_data.get("highest_score")
     winner_id = session_data.get("winner_id")
 
-    # Calculate the offset to determine which messages to fetch
-    offset = (page - 1) * messages_per_page
-
-    # Fetch messages for the current page
-    messages = session.query(Message).order_by(Message.timestamp.desc()).limit(messages_per_page).offset(offset).all()
+    messages = session.query(Message).all()
     messages_dict = [
         {
             'post_number': message.post_number,
@@ -192,17 +185,7 @@ def home():
         threaded_messages.append(root_message)
 
     session.close()
-
-    # Calculate the total number of pages based on the total number of messages
-    total_messages = session.query(Message).count()
-    total_pages = (total_messages + messages_per_page - 1) // messages_per_page
-
-    # Determine if there are previous and next pages
-    has_previous = page > 1
-    has_next = page < total_pages
-
-    return render_template('index.html', messages=threaded_messages, highest_score=highest_score, winner_id=winner_id,
-                           page=page, total_pages=total_pages, has_previous=has_previous, has_next=has_next)
+    return render_template('index.html', messages=threaded_messages, highest_score=highest_score, winner_id=winner_id)
 
 
 @app.route('/post', methods=['POST'])
