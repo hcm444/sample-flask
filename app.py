@@ -99,50 +99,6 @@ def calculate_user_originality(user_id):
     return None
 
 
-def find_most_original_user():
-    session = Session()
-
-    # Get all unique user IDs
-    unique_user_ids = session.query(Message.unique_id.distinct()).all()
-
-    user_originalities = []
-    for user_id in unique_user_ids:
-        originality = calculate_user_originality(user_id[0])
-        if originality is not None:
-            user_originalities.append((user_id[0], originality))
-
-    session.close()
-
-    if user_originalities:
-        # Sort the user originalities in descending order and return the most original user
-        user_originalities.sort(key=lambda x: x[1], reverse=True)
-        return user_originalities[0][0], user_originalities[0][1]
-
-    return None, None
-
-
-def find_least_original_user():
-    session = Session()
-
-    # Get all unique user IDs
-    unique_user_ids = session.query(Message.unique_id.distinct()).all()
-
-    user_originalities = []
-    for user_id in unique_user_ids:
-        originality = calculate_user_originality(user_id[0])
-        if originality is not None:
-            user_originalities.append((user_id[0], originality))
-
-    session.close()
-
-    if user_originalities:
-        # Sort the user originalities in ascending order and return the least original user
-        user_originalities.sort(key=lambda x: x[1])
-        return user_originalities[0][0], user_originalities[0][1]
-
-    return None, None
-
-
 def generate_unique_id(ip_address):
     # Create a hash object using the SHA-1 hash function
     hasher = hashlib.sha1()
@@ -194,49 +150,6 @@ def calculate_user_sentiment(user_id):
 
     return None
 
-
-def find_most_sentimental_user():
-    session = Session()
-
-    # Get all unique user IDs
-    unique_user_ids = session.query(Message.unique_id.distinct()).all()
-
-    user_sentiments = []
-    for user_id in unique_user_ids:
-        sentiment = calculate_user_sentiment(user_id[0])
-        if sentiment is not None:
-            user_sentiments.append((user_id[0], sentiment))
-
-    session.close()
-
-    if user_sentiments:
-        # Sort the user sentiments in descending order and return the most sentimental user
-        user_sentiments.sort(key=lambda x: x[1], reverse=True)
-        return user_sentiments[0][0], user_sentiments[0][1]
-
-    return None, None
-
-
-def find_least_sentimental_user():
-    session = Session()
-
-    # Get all unique user IDs
-    unique_user_ids = session.query(Message.unique_id.distinct()).all()
-
-    user_sentiments = []
-    for user_id in unique_user_ids:
-        sentiment = calculate_user_sentiment(user_id[0])
-        if sentiment is not None:
-            user_sentiments.append((user_id[0], sentiment))
-
-    session.close()
-
-    if user_sentiments:
-        # Sort the user sentiments in ascending order and return the least sentimental user
-        user_sentiments.sort(key=lambda x: x[1])
-        return user_sentiments[0][0], user_sentiments[0][1]
-
-    return None, None
 
 
 def calculate_originality(new_post, existing_posts):
@@ -448,31 +361,6 @@ def post():
         post_number = total_posts + 1
 
     timestamp = datetime.now()
-
-    # Check if the message contains the special command for most original or least original users
-    if '>>most_original' in message:
-        most_original_user, most_original_score = find_most_original_user()
-        if most_original_user is not None and most_original_score is not None:
-            most_original_message = f"{most_original_user} : {most_original_score:.5f}"
-            message += '\n\n' + most_original_message
-
-    if '>>least_original' in message:
-        least_original_user, least_original_score = find_least_original_user()
-        if least_original_user is not None and least_original_score is not None:
-            least_original_message = f"{least_original_user} : {least_original_score:.5f}"
-            message += '\n\n' + least_original_message
-
-    if '>>most_sentimental' in message:
-        most_sentimental_user, most_sentimental_score = find_most_sentimental_user()
-        if most_sentimental_user is not None and most_sentimental_score is not None:
-            most_sentimental_message = f"{most_sentimental_user} : {most_sentimental_score:.5f}"
-            message += '\n\n' + most_sentimental_message
-
-    if '>>least_sentimental' in message:
-        least_sentimental_user, least_sentimental_score = find_least_sentimental_user()
-        if least_sentimental_user is not None and least_sentimental_score is not None:
-            least_sentimental_message = f"{least_sentimental_user} : {least_sentimental_score:.5f}"
-            message += '\n\n' + least_sentimental_message
 
     if '>>fortune' in message:
         fortune = generate_fortune()
