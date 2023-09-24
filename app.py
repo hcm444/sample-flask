@@ -1,4 +1,3 @@
-
 session_data = {}
 from flask import Flask, render_template, request, redirect, jsonify
 from datetime import datetime, timedelta
@@ -278,10 +277,8 @@ def post():
 def get_data():
     session = Session()
 
-    # Fetch data from the Message table
     messages = session.query(Message).all()
 
-    # Create a list to store message data as dictionaries
     messages_data = []
 
     for message in messages:
@@ -293,7 +290,6 @@ def get_data():
             'parent_post': message.parent_post,
             'sentiment': calculate_sentiment(message.message),  # Calculate sentiment
             'originality': "{:.5f}".format(calculate_originality(message.message, [m.message for m in messages]))
-            # Calculate originality
         }
         messages_data.append(message_data)
 
@@ -305,6 +301,7 @@ def get_data():
     }
 
     return jsonify(response)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
