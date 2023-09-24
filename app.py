@@ -41,7 +41,6 @@ class Message(Base):
     timestamp = Column(DateTime)
     message = Column(String)
     referenced_post = Column(String(length=200))
-    unique_id = Column(String)
     parent_post = Column(Integer)
 
 
@@ -74,52 +73,9 @@ def generate_fortune():
     return random.choice(fortunes)
 
 
-def calculate_user_originality(user_id):
-    session = Session()
-
-    # Get all messages posted by the user
-    user_messages = session.query(Message).filter_by(unique_id=user_id).all()
-
-    if not user_messages:
-        session.close()
-        return None
-
-    # Calculate the originality score for each message
-    originality_scores = []
-    for message in user_messages:
-        existing_messages = [m.message for m in session.query(Message).all() if m != message]
-        originality_scores.append(calculate_originality(message.message, existing_messages))
-
-    session.close()
-
-    if originality_scores:
-        average_originality = sum(originality_scores) / len(originality_scores)
-        return average_originality
-
-    return None
 
 
-def generate_unique_id(ip_address):
-    # Create a hash object using the SHA-1 hash function
-    hasher = hashlib.sha1()
 
-    # Update the hash object with the IP address
-    hasher.update(ip_address.encode('utf-8'))
-
-    # Get the hexadecimal representation of the hash digest
-    unique_id = hasher.hexdigest()
-
-    # Take the first 8 characters of the unique ID
-    truncated_id = unique_id[:8]
-
-    # Select a random oceanic animal
-    animal = "noob"
-
-    # Concatenate the truncated ID with the oceanic animal string
-    final_id = animal + truncated_id
-
-    # Return the final ID
-    return final_id
 
 
 def calculate_sentiment(text):
@@ -127,28 +83,7 @@ def calculate_sentiment(text):
     return sentiment
 
 
-def calculate_user_sentiment(user_id):
-    session = Session()
 
-    # Get all messages posted by the user
-    user_messages = session.query(Message).filter_by(unique_id=user_id).all()
-
-    if not user_messages:
-        session.close()
-        return None
-
-    # Calculate the sentiment score for each message
-    sentiment_scores = []
-    for message in user_messages:
-        sentiment_scores.append(calculate_sentiment(message.message))
-
-    session.close()
-
-    if sentiment_scores:
-        average_sentiment = sum(sentiment_scores) / len(sentiment_scores)
-        return average_sentiment
-
-    return None
 
 
 
@@ -234,48 +169,16 @@ def snake():
 def save_high_score():
     high_score = request.json.get("score")
     ip_address = request.remote_addr
-    winner_id = generate_unique_id(ip_address)
-    print(ip_address, winner_id, high_score)
+
+    print(ip_address, high_score)
 
     # Update the highest score and unique ID if necessary
     if high_score > session_data.get("highest_score", 0):
         session_data["highest_score"] = high_score
-        session_data["winner_id"] = winner_id
 
     return jsonify({"highest_score": session_data.get("highest_score"), "winner_id": session_data.get("winner_id")})
 
 
-
-@app.route('/chart')
-@cache.cached(timeout=60)
-def chart():
-    session = Session()
-    messages = session.query(Message).all()
-    session.close()
-
-    users = {}  # Dictionary to store user data
-
-    # Process each message to calculate user-wise originality and sentiment
-    for message in messages:
-        user = message.unique_id
-
-        if user not in users:
-            users[user] = {'originality': [], 'sentiment': []}
-
-        originality = float(calculate_originality(message.message, [m.message for m in messages]))
-        sentiment = calculate_sentiment(message.message)
-
-        users[user]['originality'].append(originality)
-        users[user]['sentiment'].append(sentiment)
-
-    # Prepare data for charting
-    chart_data = []
-    for user, data in users.items():
-        avg_originality = sum(data['originality']) / len(data['originality'])
-        avg_sentiment = sum(data['sentiment']) / len(data['sentiment'])
-        chart_data.append({'user': user, 'originality': avg_originality, 'sentiment': avg_sentiment})
-
-    return render_template('chart.html', data=chart_data)
 
 
 @app.route('/')
@@ -294,7 +197,6 @@ def home():
             'message': message.message,
             'referenced_by': message.referenced_post.split(',') if message.referenced_post else None,
             'originality': "{:.5f}".format(calculate_originality(message.message, [m.message for m in messages])),
-            'unique_id': message.unique_id,
             'parent_post': message.parent_post,  # Add parent_post field
             'sentiment': calculate_sentiment(message.message)  # Use sentiment labels
         }
@@ -369,17 +271,16 @@ def post():
 
     # Use a parameterized query to insert the new post
     query = text(
-        "INSERT INTO messages (post_number, timestamp, message, referenced_post, unique_id, parent_post) "
-        "VALUES (:post_number, :timestamp, :message, :referenced_post, :unique_id, :parent_post)"
+        "INSERT INTO messages (post_number, timestamp, message, referenced_post, parent_post) "
+        "VALUES (:post_number, :timestamp, :message, :referenced_post, :parent_post)"
     )
-    unique_id = generate_unique_id(ip_address)
-    print(ip_address, unique_id)
+
+    print(ip_address)
     params = {
         'post_number': post_number,
         'timestamp': timestamp,
         'message': message,
         'referenced_post': references,
-        'unique_id': unique_id,
         'parent_post': parent_post
     }
     session.execute(query, params)
