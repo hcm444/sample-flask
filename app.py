@@ -1,5 +1,7 @@
 session_data = {}
-from flask import Flask, render_template, request, redirect, jsonify, Pagination
+from flask import Flask, render_template, request, redirect, jsonify
+from flask_paginate import Pagination
+
 from datetime import datetime, timedelta
 import re
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
