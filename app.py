@@ -1,7 +1,5 @@
 session_data = {}
 from flask import Flask, render_template, request, redirect, jsonify
-from flask_paginate import Pagination
-
 from datetime import datetime, timedelta
 import re
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
@@ -160,20 +158,12 @@ def save_high_score():
 @app.route('/')
 @cache.cached(timeout=60)
 def home():
-    page = request.args.get('page', type=int, default=1)
-    per_page = 10
 
     session = Session()
-    total_posts = session.query(Message).count()
-    messages = session.query(Message).order_by(Message.id.desc()).limit(per_page).offset((page - 1) * per_page).all()
-    session.close()
-
-    pagination = Pagination(page=page, total=total_posts, per_page=per_page, css_framework='bulma')
-
     highest_score = session_data.get("highest_score")
     winner_id = session_data.get("winner_id")
 
-
+    messages = session.query(Message).all()
     messages_dict = [
         {
             'post_number': message.post_number,
@@ -195,7 +185,7 @@ def home():
         threaded_messages.append(root_message)
 
     session.close()
-    return render_template('index.html', messages=threaded_messages, highest_score=highest_score, winner_id=winner_id, pagination=pagination)
+    return render_template('index.html', messages=threaded_messages, highest_score=highest_score, winner_id=winner_id)
 
 
 @app.route('/post', methods=['POST'])
