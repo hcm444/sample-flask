@@ -232,6 +232,21 @@ document.addEventListener("DOMContentLoaded", function() {
 <section class="section">
     <div class="container">
         <h1 class="title">Noob</h1>
+        <h2 class="subtitle">Rules:</h2>
+        <ul class="rules-list">
+            <li>1. Messages are limited to 500 characters.</li>
+            <li>2. Messages must be unique.</li>
+            <li>3. Users can post 3 times per minute.</li>
+            <li>4. Only 500 posts are saved, previous posts are deleted.</li>
+        </ul>
+        <h2 class="subtitle">Features:</h2>
+        <ul class="rules-list">
+            <li>SQL injection proof.</li>
+            <li>Unique usernames.</li>
+            <li>Originality and sentiment are graded by custom algorithms.</li>
+            <li>Friendly, fun, and diverse community.</li>
+        </ul>
+        <h2 class="subtitle">Post a message:</h2>
         <form action="/post" method="post">
             <div class="field">
                 <div class="control">
@@ -321,6 +336,8 @@ document.addEventListener("DOMContentLoaded", function() {
             <a href="https://sea-lion-app-c753c.ondigitalocean.app/snake">Snake Game</a>
             <p>Highest Score: {{ highest_score }}</p>
         </div>
+
+
 
     </div>
 </section>
