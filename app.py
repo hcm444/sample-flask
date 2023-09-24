@@ -274,5 +274,37 @@ def post():
     return redirect('/')
 
 
+@app.route("/api/data")
+def get_data():
+    session = Session()
+
+    # Fetch data from the Message table
+    messages = session.query(Message).all()
+
+    # Create a list to store message data as dictionaries
+    messages_data = []
+
+    for message in messages:
+        message_data = {
+            'post_number': message.post_number,
+            'timestamp': message.timestamp.isoformat(),  # Convert timestamp to ISO format
+            'message': message.message,
+            'referenced_post': message.referenced_post.split(',') if message.referenced_post else None,
+            'parent_post': message.parent_post,
+            'sentiment': calculate_sentiment(message.message),  # Calculate sentiment
+            'originality': "{:.5f}".format(calculate_originality(message.message, [m.message for m in messages]))
+            # Calculate originality
+        }
+        messages_data.append(message_data)
+
+    session.close()
+
+    # Create a JSON response
+    response = {
+        'messages': messages_data
+    }
+
+    return jsonify(response)
+
 if __name__ == '__main__':
     app.run(debug=True)
