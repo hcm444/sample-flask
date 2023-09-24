@@ -159,7 +159,7 @@ def save_high_score():
 @cache.cached(timeout=60)
 def home():
     page = request.args.get('page', type=int, default=1)
-    per_page = 50
+    per_page = 10
 
     session = Session()
     total_posts = session.query(Message).count()
