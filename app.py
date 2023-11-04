@@ -296,7 +296,7 @@ def get_data():
 
     session.close()
 
-
+    # Create a JSON response
     response = {
         'messages': messages_data
     }
